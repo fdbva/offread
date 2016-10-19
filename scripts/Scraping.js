@@ -80,6 +80,7 @@ function StartScrap(e) {
     const parsedInput = parseUserInput(inputScrape.value, supportedSites);
     const yqlStringLinks = yqlStringBuilder(parsedInput.href, parsedInput.xpathLinks);
     const yqlStringChapters = new Set();
+    console.log(parsedInput);
     var title = document.querySelector('#title');
 
         Story.name = parsedInput.storyName;
@@ -106,6 +107,7 @@ function StartScrap(e) {
 
 function populateChaptersSelectOptions() {
     const chaptersSelect = document.querySelector('#chapters-select');
+    const navigation = document.querySelector('.reader');
     chaptersSelect.innerHTML = "";
     const optionHtml = document.createDocumentFragment();
     for (let i = 1; i <= Story.chapters; i++) {
@@ -113,10 +115,12 @@ function populateChaptersSelectOptions() {
 
         //chaptersSelect.appendChild(opt); manipulando dom diretamente no loop?
     }
-    chaptersSelect.appendChild(optionHtml);
+    chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
+    const reader = document.querySelector('.reader');
+    reader.insertAdjacentHTML('beforeend', navigation.cloneNode(true));
     chaptersSelect.addEventListener('change', function() {
         goToChapter(this.value);
-    })
+    });
 }
 
 function populateChapters() {
