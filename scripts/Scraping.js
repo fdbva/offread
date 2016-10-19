@@ -118,7 +118,9 @@ function populateChaptersSelectOptions() {
     chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
     const reader = document.querySelector('.reader');
     reader.insertAdjacentHTML('beforeend', navigation.cloneNode(true));
-    reader.insertAdjacentElement('beforeend', navigation.cloneNode(true));
+    console.log(navigation.cloneNode(true));
+    console.log(reader);
+    reader.insertAdjacentElement('beforeend', navigation.cloneNode(true).innerHTML);
     chaptersSelect.addEventListener('change', function() {
         goToChapter(this.value);
     });
