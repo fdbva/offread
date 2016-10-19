@@ -7,17 +7,10 @@
   const DB_VERSION = 3; // Use a long long for this value (don't use a float)
   const DB_STORE_NAME = 'stories';
 
-<<<<<<< HEAD
-  var db;
-
-  // Used to keep track of which view is displayed to avoid uselessly reloading it
-  var current_view_pub_key;
-=======
   let db;
 
   // Used to keep track of which view is displayed to avoid uselessly reloading it
   let current_view_pub_key;
->>>>>>> jcn13
 
   function openDb(fn) {
     console.log("openDb ...");
@@ -153,11 +146,7 @@
     const storyList = document.querySelector('#storyList');
     storyList.innerHTML = '';
 
-<<<<<<< HEAD
-    var req = store.count();
-=======
     let req = store.count();
->>>>>>> jcn13
     // Requests are executed in the order in which they were made against the
     // transaction, and their results are returned in the same order.
     // Thus the count text below will be displayed before the actual pub list
@@ -171,11 +160,7 @@
       displayActionFailure(this.error);
     };
 
-<<<<<<< HEAD
-    var i = 0;
-=======
     let i = 0;
->>>>>>> jcn13
     req = store.openCursor();
     req.onsuccess = function(evt) {
       const cursor = evt.target.result;
@@ -220,11 +205,7 @@
       "NumberOfChapters": numberOfChapters};
 
     const store = getObjectStore(DB_STORE_NAME, 'readwrite');
-<<<<<<< HEAD
-    var req;
-=======
     let req;
->>>>>>> jcn13
     try {
       req = store.put(obj);
     } catch (e) {
@@ -256,17 +237,10 @@
         // displayActionFailure("No matching record found");
         return;
       }
-<<<<<<< HEAD
-      deletePublication(evt.target.result.id, store);
-    };
-    req.onerror = function (evt) {
-      console.error("deletePublicationFromBib:", evt.target.errorCode);
-=======
       deleteMethod(evt.target.result.ChapterId, store);
     };
     req.onerror = function (evt) {
       console.error("deleteMethodFromBib:", evt.target.errorCode);
->>>>>>> jcn13
     };
   }
 
@@ -275,11 +249,7 @@
    * @param {IDBObjectStore=} store
    */
   function deleteMethod(key, store) {
-<<<<<<< HEAD
-    console.log("deletePublication:", arguments);
-=======
     console.log("deleteMethod:", arguments);
->>>>>>> jcn13
 
     if (typeof store == 'undefined')
       store = getObjectStore(DB_STORE_NAME, 'readwrite');
@@ -288,11 +258,7 @@
     // the result of the Object Store Deletion Operation algorithm is
     // undefined, so it's not possible to know if some records were actually
     // deleted by looking at the request result.
-<<<<<<< HEAD
-    const req = store.get(key);
-=======
     let req = store.get(key);
->>>>>>> jcn13
     req.onsuccess = function(evt) {
       const record = evt.target.result;
       console.log("record:", record);
@@ -310,11 +276,7 @@
         console.log("evt.target.result:", evt.target.result);
         console.log("delete successful");
         // displayActionSuccess("Deletion successful");
-<<<<<<< HEAD
-        displayStoryList(store);
-=======
         //displayStoryList(store);
->>>>>>> jcn13
       };
       req.onerror = function (evt) {
         console.error("deleteStory:", evt.target.errorCode);
