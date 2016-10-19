@@ -24,7 +24,7 @@ mobileNav.addEventListener('click', function(e) {
 
 inputScrape.addEventListener('focus', function(event){
     this.value = "";
-});
+}); //optionally clear on 'beforepaste'
 
 var Story = {};
 document.addEventListener("DOMContentLoaded", function(event) {
