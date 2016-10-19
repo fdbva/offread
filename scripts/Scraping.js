@@ -20,7 +20,11 @@ mobileNav.addEventListener('click', function(e) {
     navToggle.classList.toggle("active");
     var style = window.getComputedStyle(sidebar);
     sidebar.style.display = style.display === 'none' ? 'block' : 'none';
-})
+});
+
+inputScrape.addEventListener('focus', function(event){
+    this.value = "";
+});
 
 var Story = {};
 document.addEventListener("DOMContentLoaded", function(event) {
