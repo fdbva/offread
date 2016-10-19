@@ -115,9 +115,8 @@ function populateChaptersSelectOptions() {
 
         //chaptersSelect.appendChild(opt); manipulando dom diretamente no loop?
     }
-    chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
+    chaptersSelect.insertAdjacentElement('afterbegin', optionHtml);
     const reader = document.querySelector('.reader');
-    reader.insertAdjacentHTML('beforeend', navigation.cloneNode(true));
     console.log(navigation.cloneNode(true));
     console.log(reader);
     reader.insertAdjacentElement('beforeend', navigation.cloneNode(true));
