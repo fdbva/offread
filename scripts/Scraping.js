@@ -107,13 +107,10 @@ function StartScrap(e) {
 function populateChaptersSelectOptions() {
     const chaptersSelect = document.querySelector('#chapters-select');
     chaptersSelect.innerHTML = "";
-    let optionHtml = "";
+    const optionHtml = document.createDocumentFragment();
     for (let i = 1; i <= Story.chapters; i++) {
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.innerHTML = "Chapter: " + i;
+        optionHtml.appendChild(new Option("Chapter: " + i, i));
 
-        optionHtml+= opt;
         //chaptersSelect.appendChild(opt); manipulando dom diretamente no loop?
     }
     chaptersSelect.appendChild(optionHtml);
