@@ -107,7 +107,7 @@ function StartScrap(e) {
 
 function populateChaptersSelectOptions() {
     const chaptersSelect = document.querySelector('#chapters-select');
-    const navigation = document.querySelector('.reader');
+    const navigation = document.querySelector('.navigation');
     chaptersSelect.innerHTML = "";
     const optionHtml = document.createDocumentFragment();
     for (let i = 1; i <= Story.chapters; i++) {
