@@ -105,15 +105,18 @@ function StartScrap(e) {
 }
 
 function populateChaptersSelectOptions() {
-    var chaptersSelect = document.querySelector('#chapters-select');
-    for (var i = 1; i <= Story.chapters; i++) {
-        var opt = document.createElement("option");
+    const chaptersSelect = document.querySelector('#chapters-select');
+    chaptersSelect.innerHTML = "";
+    let optionHtml = "";
+    for (let i = 1; i <= Story.chapters; i++) {
+        const opt = document.createElement("option");
         opt.value = i;
         opt.innerHTML = "Chapter: " + i;
 
-        chaptersSelect.appendChild(opt);
+        optionHtml+= opt;
+        //chaptersSelect.appendChild(opt); manipulando dom diretamente no loop?
     }
-
+    chaptersSelect.appendChild(optionHtml);
     chaptersSelect.addEventListener('change', function() {
         goToChapter(this.value);
     })
