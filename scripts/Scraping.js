@@ -10,7 +10,6 @@ const resultsAnchor = document.querySelector('#resultsAnchor');
 const nextChapterLink = document.querySelector('.next');
 const previousChapterLink = document.querySelector('.prev');
 
-<<<<<<< HEAD
 var chaptersTotal = document.querySelector('#chapters-total');
 var mobileNav = document.querySelector('#mobile-nav');
 
@@ -24,12 +23,6 @@ mobileNav.addEventListener('click', function(e) {
 })
 
 var Story = {};
-=======
-let chaptersTotal = document.querySelector('#chapters-total');
-
-let Story = {};
->>>>>>> jcn13
-
 document.addEventListener("DOMContentLoaded", function(event) {
     openDb(function() {
         updateStoryList();
@@ -85,31 +78,6 @@ function StartScrap(e) {
     const yqlStringChapters = new Set();
     var title = document.querySelector('#title');
 
-<<<<<<< HEAD
-    Story.name = parsedInput.storyName;
-    title.textContent = Story.name;
-    makeRequest('GET', yqlStringLinks).then(function(data) {
-        var numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
-        chaptersTotal.textContent = numberOfChapters;
-
-        Story.chapters = numberOfChapters;
-        Story.data = data;
-        Story.parsedInput = parsedInput;
-        Story.currentChapter = 1;
-        Story.id = parsedInput.storyId;
-        Story.href = parsedInput.href;
-
-        populateChaptersSelectOptions();
-        populateChapters();
-
-    }).catch(function(err) {
-        console.log('Request failed', err);
-    })
-=======
-    //if auth, if f1 => createStoryFolderGDrive
-    //listFilesFolder(parsedInput.storyId, id, function(idc)
-    
-    
         Story.name = parsedInput.storyName;
         title.textContent = Story.name;
         makeRequest('GET', yqlStringLinks).then(function(data) 
@@ -129,10 +97,7 @@ function StartScrap(e) {
 
         }).catch(function(err) {
             console.log('Request failed', err);
-        })
-    
-   
->>>>>>> jcn13
+        });
 }
 
 function populateChaptersSelectOptions() {
@@ -161,18 +126,15 @@ function populateChapters() {
                 addOrReplaceStory(nextStoryPath, Story.name, Story.href,
                     data, Story.chapters);
                 updateStoryList();
-<<<<<<< HEAD
-=======
-                    //if f1, f2, auth => sendChapterObjectToGoogleDrive
-                    const obj = {
-                        "ChapterId": nextStoryPath,
-                        "StoryName": Story.name,
-                        "Url": Story.href,
-                        "Content": data,
-                        "NumberOfChapters": Story.chapters
-                    };                    
-                    uploadChapter(obj, globalStoryFolderGoogleId);
->>>>>>> jcn13
+                //if f1, f2, auth => sendChapterObjectToGoogleDrive
+                const obj = {
+                    "ChapterId": nextStoryPath,
+                    "StoryName": Story.name,
+                    "Url": Story.href,
+                    "Content": data,
+                    "NumberOfChapters": Story.chapters
+                };                    
+                uploadChapter(obj, globalStoryFolderGoogleId);
             })
             .catch(function(err) {
                 console.log('Request failed', err);
@@ -182,7 +144,6 @@ function populateChapters() {
     getCurrentChapter();
 }
 
-<<<<<<< HEAD
 function closeMobileSidebar() {
     var sidebar = document.querySelector('.sidebar');
     var navToggle = document.querySelector('.nav-toggle');
@@ -191,8 +152,6 @@ function closeMobileSidebar() {
     sidebar.style.display = 'none';
 }
 
-=======
->>>>>>> jcn13
 function updateStoryList() {
     populateStoryArray(function(data){
         const strList = document.querySelector(".sidebar-list");
@@ -207,10 +166,9 @@ function updateStoryList() {
         const storySelector = document.querySelectorAll('.story-sel');
         for (var i = storySelector.length - 1; i >= 0; i--) {
             storySelector[i].addEventListener('click', function(e) {
-<<<<<<< HEAD
-=======
+
                 console.log(this.dataset.story);
->>>>>>> jcn13
+
                 var s = this.dataset.story;
 
                 Story.name = data[s].StoryName;
@@ -219,10 +177,8 @@ function updateStoryList() {
                 chaptersTotal.textContent = Story.chapters;
                 title.textContent = Story.name;
                 Story.currentChapter = 1;
-<<<<<<< HEAD
+
                 closeMobileSidebar();
-=======
->>>>>>> jcn13
                 getCurrentChapter();
                 updateNav();
                 populateChaptersSelectOptions();
@@ -255,13 +211,10 @@ function getCurrentChapter() {
 const supportedSites = new Map([
     ["www.fanfiction.net", {
         xpathLinks: '//*[@id="chap_select"]',
-<<<<<<< HEAD
         xpathStory: '//*[@id="storytext"]'
     }],
     ["m.fanfiction.net", {
         xpathLinks: '//*[@id="jump"]',
-        xpathStory: '//*[@id="storytext"]'
-=======
         xpathStory: '//*[@id="storytext"]',
         jsonNChapters: '.query.results.select[0].option.length'
     }],
@@ -269,7 +222,6 @@ const supportedSites = new Map([
         xpathLinks: '//*[@id="jump"]',
         xpathStory: '//*[@id="storytext"]',
         jsonNChapters: '.query.results.select[0].option.length'
->>>>>>> jcn13
     }],
     ["www.fictionpress.com", {
         xpathLinks: '//*[@id="chap_select"]',
@@ -278,12 +230,8 @@ const supportedSites = new Map([
     }],
     ["m.fictionpress.com", {
         xpathLinks: '//*[@id="d_menu"]/div/form',
-<<<<<<< HEAD
-        xpathStory: '//*[@id="storytext"]'
-=======
         xpathStory: '//*[@id="storytext"]',
         jsonNChapters: '.query.results.select[0].option.length'
->>>>>>> jcn13
     }],
 ]);
 
@@ -310,14 +258,7 @@ function parseUserInput(url, supSites) {
     return input;
 }
 
-<<<<<<< HEAD
-function yqlStringBuilder(parsedUrl, xpath, format) {
-    if (!format)
-        format = 'json';
-
-=======
 function yqlStringBuilder(parsedUrl, xpath, format = 'json') {
->>>>>>> jcn13
     if (!parsedUrl || !xpath) {
         console.log(`yqlStringBuilder input problem:
                       parsedUrl: ${parsedUrl}
