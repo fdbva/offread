@@ -13,6 +13,27 @@ const previousChapterLink = document.querySelector('.prev');
 var chaptersTotal = document.querySelector('#chapters-total');
 var mobileNav = document.querySelector('#mobile-nav');
 
+const homebtn = document.querySelector('.home-btn');
+const aboutbtn = document.querySelector('.about-btn');
+aboutbtn.addEventListener('click', displayScreen.bind(this, 'about'));
+homebtn.addEventListener('click', displayScreen.bind(this, 'home'));
+
+function displayScreen(currentDisplay) {
+    const offreader = document.querySelector('.offreader');
+    const home = document.querySelector('.home');
+    const about = document.querySelector('.about');
+    offreader.style.display = 'none';
+    home.style.display = 'none';
+    about.style.display = 'none';
+
+    if (currentDisplay === 'about')
+        about.style.display = 'block';
+    else if (currentDisplay === 'home')
+        home.style.display = 'block';
+    else
+        offreader.style.display = 'block';
+}
+
 mobileNav.addEventListener('click', function(e) {
     var sidebar = document.querySelector('.sidebar');
     var navToggle = document.querySelector('.nav-toggle');
@@ -195,6 +216,8 @@ function updateStoryList() {
                 getCurrentChapter();
                 updateNav();
                 populateChaptersSelectOptions();
+
+                displayScreen();
             });
         }
     });

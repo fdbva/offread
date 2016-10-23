@@ -9,6 +9,10 @@
     <link rel="stylesheet" href="main.css">
 </head>
 <body>
+    <nav class="nav">
+        <div class="home-btn">Home</div>
+        <div class="about-btn">About</div>
+    </nav>
     <section class="loader">
         <div id="load"></div>
     </section>
@@ -29,25 +33,31 @@
         <div class="sidebar-list"></div>
     </section>
     <section class="reader">
-        <div class="title" id="title">
-            . . .
+        <div class="home">
+            <h1>This is HOME PAGE</h1>
+            <br>
+            <p>Homepage description</p>
         </div>
-        <div class="description">
-            <p>Chapters: <span id="chapters-total">0</span></p>
+        <div class="about">
+            This is ABOUT PAGE
         </div>
-        <div class="navigation">
-            <select id="chapters-select" class="chapters" title="Chapter Navigation" name="chapter">
+        <div class="offreader">
+            <div class="title" id="title">
+                . . .
+            </div>
+            <div class="description">
+                <p>Chapters: <span id="chapters-total">0</span></p>
+            </div>
+            <div class="navigation">
+                <select id="chapters-select" class="chapters" title="Chapter Navigation" name="chapter">
 
-            </select>
-            <a class="btn prev disable" type="button">< Prev</a>
-            <a class="btn next" type="button">Next &gt;</a>
+                </select>
+                <a class="btn prev disable" type="button">< Prev</a>
+                <a class="btn next" type="button">Next &gt;</a>
+            </div>
+            <div class="text" id="storyList"></div>
         </div>
-        <div class="text" id="storyList"></div>
     </section>
-    <nav class="nav">
-        <div>Home</div>
-        <div>About</div>
-    </nav>
     <script src="scripts/gapi-auth.js"></script>
     <script type="text/javascript" src="https://apis.google.com/js/client.js?onload=handleClientLoad"></script>
     <script src="scripts/pace.js"></script>

@@ -65,6 +65,14 @@ body {
     border-right: 1px solid #d2d2d2;
 }
 
+.about-btn, .home-btn {
+    cursor: pointer;
+}
+
+.about, .offreader {
+    display: none;
+}
+
 .reader {
     position: absolute;
     z-index: 2;
@@ -87,7 +95,7 @@ body {
     bottom: 0;
     margin-bottom: 20px;
     color: #555;
-    z-index: 2;
+    z-index: 99;
     width: 320px;
     text-align: center;
     display: flex;
@@ -159,10 +167,8 @@ body {
 }
 
 .sidebar-list {
-    min-height: 100%;
-    padding-bottom: 3.5rem;
     padding-top: 1rem;
-    height: 81%;
+    height: 70%;
     overflow: hidden;
 }
 
