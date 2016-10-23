@@ -85,7 +85,7 @@ function StartScrap(e) {
 
         Story.name = parsedInput.storyName;
         title.textContent = Story.name;
-        makeRequest('GET', yqlStringLinks).then(function(data) 
+        makeRequest('GET', yqlStringLinks).then(function(data)
         {
             var numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
             chaptersTotal.textContent = numberOfChapters;
@@ -98,7 +98,8 @@ function StartScrap(e) {
             Story.href = parsedInput.href;
 
             populateChaptersSelectOptions();
-            createStoryFolder(parsedInput.storyId);
+            populateChapters();
+            // createStoryFolder(parsedInput.storyId);
 
         }).catch(function(err) {
             console.log('Request failed', err);
@@ -113,13 +114,14 @@ function populateChaptersSelectOptions() {
     for (let i = 1; i <= Story.chapters; i++) {
         optionHtml.appendChild(new Option("Chapter: " + i, i));
 
-        //chaptersSelect.appendChild(opt); manipulando dom diretamente no loop?
+        // chaptersSelect.appendChild(opt);
     }
-    chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
-    const reader = document.querySelector('.reader');
-    console.log(navigation.cloneNode(true));
-    console.log(reader);
-    reader.insertAdjacentElement('beforeend', navigation.cloneNode(true));
+    // chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
+    // const reader = document.querySelector('.reader');
+    // console.log(navigation.cloneNode(true));
+    // console.log(reader);
+    // reader.insertAdjacentElement('beforeend', navigation.cloneNode(true));
+    chaptersSelect.appendChild(optionHtml);
     chaptersSelect.addEventListener('change', function() {
         goToChapter(this.value);
     });
@@ -143,8 +145,8 @@ function populateChapters() {
                     "Url": Story.href,
                     "Content": data,
                     "NumberOfChapters": Story.chapters
-                };                    
-                uploadChapter(obj, globalStoryFolderGoogleId);
+                };
+                // uploadChapter(obj, globalStoryFolderGoogleId);
             })
             .catch(function(err) {
                 console.log('Request failed', err);
@@ -158,8 +160,10 @@ function closeMobileSidebar() {
     var sidebar = document.querySelector('.sidebar');
     var navToggle = document.querySelector('.nav-toggle');
 
-    navToggle.classList.remove("active");
-    sidebar.style.display = 'none';
+    if (navToggle.classList.contains('active')) {
+        navToggle.classList.remove("active");
+        sidebar.style.display = 'none';
+    }
 }
 
 function updateStoryList() {
@@ -176,7 +180,6 @@ function updateStoryList() {
         const storySelector = document.querySelectorAll('.story-sel');
         for (var i = storySelector.length - 1; i >= 0; i--) {
             storySelector[i].addEventListener('click', function(e) {
-
                 console.log(this.dataset.story);
 
                 var s = this.dataset.story;
