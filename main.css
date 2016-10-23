@@ -160,6 +160,9 @@ body {
     box-shadow: inset -1px 0 #e3e3e3;
     color: #333;
 }
+.sidebar-list--item.disable {
+    opacity: 0.3;
+}
 
 .sidebar-list--item.active {
     background: #a5a5a5;
@@ -209,13 +212,19 @@ body {
     border: 2px solid #eee;
 }
 
-#btn-scrape {
+.btn-scrape {
     margin-top: 10px;
+    margin-right: 5px;
     background: #FFF;
     color: #000;
+    display: flex;
     padding: 5px 20px;
     cursor: pointer;
     border: 2px solid #a5a5a5;
+}
+
+.google-drive-icon {
+    width: 16px;
 }
 
 .mobile-nav {
@@ -278,7 +287,7 @@ body {
         width: 250px;
     }
 
-    #btn-scrape {
+    .btn-scrape {
         margin-top: 5px;
         padding: 3px 15px;
     }
@@ -312,7 +321,7 @@ body {
 }
 
 .pace .pace-progress {
-  background: #29d;
+  background: #555;
   position: fixed;
   z-index: 2000;
   top: 0;
@@ -327,7 +336,7 @@ body {
   right: 0px;
   width: 100px;
   height: 100%;
-  box-shadow: 0 0 10px #29d, 0 0 5px #29d;
+  box-shadow: 0 0 10px #29d, 0 0 5px #555;
   opacity: 1.0;
   -webkit-transform: rotate(3deg) translate(0px, -4px);
   -moz-transform: rotate(3deg) translate(0px, -4px);
@@ -345,8 +354,8 @@ body {
   width: 14px;
   height: 14px;
   border: solid 2px transparent;
-  border-top-color: #29d;
-  border-left-color: #29d;
+  border-top-color: #555;
+  border-left-color: #555;
   border-radius: 10px;
   -webkit-animation: pace-spinner 400ms linear infinite;
   -moz-animation: pace-spinner 400ms linear infinite;
