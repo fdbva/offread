@@ -87,26 +87,19 @@ function testReturn(data) {
 //};
 
 function populateChapters() {
-    for (let i = 1; i <= Story.chapters; i++) {
-        const chapterUrl = Story.parsedInput.hrefEmptyChapter + i,
-            xpath = Story.parsedInput.xpathStory;
-
-        const nextStoryPath = Story.id + "." + i;
+    for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
+        const chapterUrl = that.scrape.parsedInput.hrefEmptyChapter + i;
+        const xpath = that.scrape.parsedInput.xpathStory;
+        const storyChapterId = that.scrape.parsedInput.storyId+`.${i}`;
         makeRequest("GET", yqlStringBuilder(chapterUrl, xpath, "xml"))
-            .then(function(data) {
-                upsertChapter(nextStoryPath,
-                    Story.name,
-                    Story.href,
-                    data,
-                    Story.chapters);
+            .then(function(response) {
+                upsertChapter(storyChapterId,
+                    that.scrape.parsedInput.name,
+                    that.scrape.parsedInput.href,
+                    response,
+                    that.scrape.totalOfChapters);
+                //TODO: Raphael, vai percorrer o banco inteiro a cada capitulo adicionado?
                 updateStoryList();
-                const obj = {
-                    "storyChapterId": nextStoryPath,
-                    "StoryName": Story.name,
-                    "ChapterUrl": Story.href,
-                    "Content": data,
-                    "NumberOfChapters": Story.chapters
-                };
             })
             .catch(function(err) {
                 console.log("Request failed", err);

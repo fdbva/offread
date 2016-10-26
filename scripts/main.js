@@ -27,24 +27,8 @@ btnScrape.addEventListener("click",
         //.then(buildChapterPromises)
         //.then(getFirstChapter)
         //.then(getAllChapters)
-        // .then(testReturn)
-        // .then(populateDropDownMenu)
+        //.then(testReturn)
+        //.then(populateDropDownMenu)
 );
 
-const populateDropDownMenu = function (data) {
-    const promise = new Promise(function (resolve, reject) {
-        console.log("populateDropDownMenu, data:", data);
-        for (let i = 1; i <= Story.chapters; i++) {
-            const opt = document.createElement("option");
-            opt.value = i;
-            opt.innerHTML = "Chapter: " + i;
-            chaptersSelect.appendChild(opt);
-        };
-        chaptersSelect.addEventListener("change", function () {
-            goToChapter(this.value);
-        });
-        resolve();
-    });
-    return promise;
-};
 

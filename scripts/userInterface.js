@@ -30,7 +30,6 @@ function toggleSideBar() {
 
 function populateChaptersSelectOptions() {
     const chaptersSelect = document.querySelector("#chapters-select");
-    const navigation = document.querySelector(".navigation");
     chaptersSelect.innerHTML = "";
     const optionHtml = document.createDocumentFragment();
     for (let i = 1; i <= Story.chapters; i++) {
@@ -41,6 +40,23 @@ function populateChaptersSelectOptions() {
         goToChapter(this.value);
     });
 }
+
+const populateDropDownMenu = function (data) {
+    const promise = new Promise(function (resolve, reject) {
+        console.log("populateDropDownMenu, data:", data);
+        for (let i = 1; i <= Story.chapters; i++) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.innerHTML = "Chapter: " + i;
+            chaptersSelect.appendChild(opt);
+        };
+        chaptersSelect.addEventListener("change", function () {
+            goToChapter(this.value);
+        });
+        resolve();
+    });
+    return promise;
+};
 
 function closeMobileSidebar() {
     const sidebar = document.querySelector(".sidebar");
