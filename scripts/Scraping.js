@@ -48,14 +48,6 @@ function getAllChapters(data) {
     });
 };
 
-function testReturn(data) {
-    const promise = new Promise(function(resolve, reject) {
-        console.log("testReturn, data: ", data);
-        resolve(data);
-    });
-    return promise;
-};
-
 //function StartScrap(e) {
 //    const parsedInput = parseUserInput(inputScrape.value, supportedSites);
 //    const yqlStringLinks = yqlStringBuilder(parsedInput.href, parsedInput.xpathLinks);

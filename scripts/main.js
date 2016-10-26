@@ -27,7 +27,6 @@ btnScrape.addEventListener("click",
         //.then(buildChapterPromises)
         //.then(getFirstChapter)
         //.then(getAllChapters)
-        //.then(testReturn)
         //.then(populateDropDownMenu)
 );
 
