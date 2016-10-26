@@ -23,13 +23,16 @@ that.scrape = {
         storyId: null,
         storyName: null
     },
-    yqlGetChapterLinks: null
+    yqlGetChapterLinks: null,
+    chapterLinksList: [],
+    totalOfChapters: 0,
+    currentChapter: 0
 }
 that.chapterObject = {
     storyChapterId: null,
     storyName: null,
     totalOfChapters: null,
-    url: null,
+    chapterUrl: null,
     storyContent: null
 };
 that.storyInfo = {
@@ -90,6 +93,7 @@ const supportedSites = new Map([
 ]);
 
 function makeRequest(data) {
+    if (!data) return;
     return new Promise(function (resolve, reject) {
         const xhr = new XMLHttpRequest();
         console.log(`making request with url: ${data.url}`);

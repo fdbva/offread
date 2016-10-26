@@ -3,17 +3,17 @@
 /*eslint prefer-const: "error"*/
 /*eslint-env es6*/
 
-const getFirstChapter = function(data) {
+function getFirstChapter(data) {
     console.log("getFirstChapter beforebegin");
-    return makeRequest(data.chapterLinks[0])
+    return makeRequest(that.scrape.chapterLinksList[0])
         .then(function(response) {
             //console.log("getFirstChapter, response", response);
             return upsertChapter(
-                    data.idStory + ".1",
-                    data.parsedInput.storyName,
-                    data.parsedInput.href,
+                    that.scrape.parsedInput.storyId + ".1",
+                    that.scrape.parsedInput.storyName,
+                    that.scrape.parsedInput.hrefEmptyChapter+"/1",
                     response,
-                    data.numberOfChapters
+                    that.scrape.totalOfChapters
                 )
                 .then(function() {
                     // data.chapterLinks.shift();
@@ -26,19 +26,19 @@ const getFirstChapter = function(data) {
         });
 };
 
-const getAllChapters = function(data) {
-    delete data.chapterLinks[0];
-    console.log("getAllChapters, data", data.chapterLinks);
+function getAllChapters(data) {
+    delete that.scrape.chapterLinksList[0];
+    console.log("getAllChapters, data", that.scrape.chapterLinksList);
     console.log("getAllChapters, inside loop, data", data);
-    return data.chapterLinks.map(function(response, i) {
-        return makeRequest(data.chapterLinks[i])
+    return that.scrape.chapterLinksList.map(function(response, i) {
+        return makeRequest(that.scrape.chapterLinksList[i])
             .then(function(response) {
                 return upsertChapter(
-                        data.idStory + "." + (i + 1),
-                        data.parsedInput.storyName,
-                        data.parsedInput.href,
+                        that.scrape.parsedInput.storyId + "." + (i + 1),
+                        that.scrape.parsedInput.storyName,
+                        that.scrape.parsedInput.hrefEmptyChapter+`/${i+1}`,
                         response,
-                        data.numberOfChapters)
+                        that.scrape.totalOfChapters)
                     .then(function() {
                         //update sidebar, update nav
                         console.log("getAllChapters -> after save each chapter");
@@ -48,7 +48,7 @@ const getAllChapters = function(data) {
     });
 };
 
-const testReturn = function(data) {
+function testReturn(data) {
     const promise = new Promise(function(resolve, reject) {
         console.log("testReturn, data: ", data);
         resolve(data);
@@ -88,11 +88,11 @@ const testReturn = function(data) {
 
 function populateChapters() {
     for (let i = 1; i <= Story.chapters; i++) {
-        const url = Story.parsedInput.hrefEmptyChapter + i,
+        const chapterUrl = Story.parsedInput.hrefEmptyChapter + i,
             xpath = Story.parsedInput.xpathStory;
 
         const nextStoryPath = Story.id + "." + i;
-        makeRequest("GET", yqlStringBuilder(url, xpath, "xml"))
+        makeRequest("GET", yqlStringBuilder(chapterUrl, xpath, "xml"))
             .then(function(data) {
                 upsertChapter(nextStoryPath,
                     Story.name,
@@ -103,7 +103,7 @@ function populateChapters() {
                 const obj = {
                     "storyChapterId": nextStoryPath,
                     "StoryName": Story.name,
-                    "Url": Story.href,
+                    "ChapterUrl": Story.href,
                     "Content": data,
                     "NumberOfChapters": Story.chapters
                 };
@@ -181,7 +181,8 @@ function yqlStringBuilder(parsedUrl, xpath, format = "json") {
     return yql;
 };
 
-const ScrapeButtonStarter = new Promise((resolve, reject) => {
+    const ScrapeButtonStarter = new Promise((resolve, reject) => {
+        console.log("INSIDE");
     resolve();
 });
 
@@ -202,18 +203,22 @@ const ScrapeButtonStarter2 = function() {
         resolve({ method: "GET", url: that.scrape.yqlAllChapterLinks });
     });
 };
-const getStoryInfo = function(data) {
+function getStoryInfo(data) {
+    console.log("AAAAA");
+    if (!data) return;
     console.log("getStoryInfo, data:", data);
     return makeRequest(data);
 };
-const parseStoryInfo = function(data) {
+function parseStoryInfo(response) {
     const promise = new Promise((resolve, reject) => {
-        const numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
-        if (numberOfChapters <= 0) {
+        const totalOfChapters = (JSON.parse(response)).query.results.select[0].option.length;
+        if (totalOfChapters <= 0) {
             reject();
         }
+        that.scrape.totalOfChapters = totalOfChapters;
+        that.scrape.currentChapter = 1;
         const storyObj = {
-            numberOfChapters: numberOfChapters,
+            numberOfChapters: totalOfChapters,
             data: data,
             parsedInput: parsedInput,
             currentChapter: 1,
@@ -226,17 +231,17 @@ const parseStoryInfo = function(data) {
     });
     return promise;
 };
-const buildChapterPromises = function(data) {
+function buildChapterPromises(data) {
     const promise = new Promise(function(resolve, reject) {
         for (let i = 1; i <= 3; i++) { //data.numberOfChapters; i++) {
-            const yqlStringChapter = yqlStringBuilder(
-                data.parsedInput.hrefEmptyChapter + i,
-                data.parsedInput.xpathStory,
+            const yqlGetChapter = yqlStringBuilder(
+                that.scrape.parsedInput.hrefEmptyChapter + i,
+                that.scrape.parsedInput.xpathStory,
                 "xml");
-            data.chapterLinks.push({ method: "GET", url: yqlStringChapter });
+            that.scrape.chapterLinksList.push({ method: "GET", url: yqlGetChapter });
         };
         console.log("buildChapterPromises, data", data);
-        if (!data || !data.chapterLinks || data.chapterLinks.length <= 0) {
+        if (!that.scrape || !that.scrape.chapterLinksList || that.scrape.chapterLinks.length <= 0) {
             reject(data);
         }
         resolve(data);

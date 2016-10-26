@@ -52,7 +52,7 @@ function clearObjectStore() {
     };
 }
 
-//rever de callback para promise
+//TODO: rever de callback para promise
 function getChapter(storyChapterId) {
     const request = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME).get(storyChapterId);
     request.onerror = function (event) {
@@ -67,7 +67,7 @@ function getChapter(storyChapterId) {
     };
 }
 
-//rever de callback para promise
+//TODO: rever de callback para promise
 function populateStoryArray(onCompleteCallbackFunction) {
     const transaction = db.transaction(DB_STORE_NAME);
     const objectStore = transaction.objectStore(DB_STORE_NAME);
@@ -91,15 +91,15 @@ function populateStoryArray(onCompleteCallbackFunction) {
 /**
 * @param {string} storyChapterId
 * @param {string} storyName
-* @param {string} url
+* @param {string} chapterUrl
 * @param {json object} content
 * @param {string} numberOfChapters
 */
-function upsertChapter(storyChapterId, storyName, url, content, numberOfChapters) {
+function upsertChapter(storyChapterId, storyName, chapterUrl, content, numberOfChapters) {
     const obj = {
         "storyChapterId": storyChapterId,
         "StoryName": storyName,
-        "Url": url,
+        "ChapterUrl": chapterUrl,
         "Content": content,
         "NumberOfChapters": numberOfChapters
     };
