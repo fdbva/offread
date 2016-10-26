@@ -3,281 +3,157 @@
 /*eslint prefer-const: "error"*/
 /*eslint-env es6*/
 
-const btnScrape = document.querySelector("#btn-scrape");
-const inputScrape = document.querySelector("#input-scrape");
-// const indexedDbShowButton = document.querySelector("#indexedDbShow");
-const resultsAnchor = document.querySelector('#resultsAnchor');
-const nextChapterLink = document.querySelector('.next');
-const previousChapterLink = document.querySelector('.prev');
-
-var chaptersTotal = document.querySelector('#chapters-total');
-var mobileNav = document.querySelector('#mobile-nav');
-
-const homebtn = document.querySelector('.home-btn');
-const aboutbtn = document.querySelector('.about-btn');
-aboutbtn.addEventListener('click', displayScreen.bind(this, 'about'));
-homebtn.addEventListener('click', displayScreen.bind(this, 'home'));
-
-function displayScreen(currentDisplay) {
-    const offreader = document.querySelector('.offreader');
-    const home = document.querySelector('.home');
-    const about = document.querySelector('.about');
-    offreader.style.display = 'none';
-    home.style.display = 'none';
-    about.style.display = 'none';
-
-    if (currentDisplay === 'about')
-        about.style.display = 'block';
-    else if (currentDisplay === 'home')
-        home.style.display = 'block';
-    else
-        offreader.style.display = 'block';
-}
-
-mobileNav.addEventListener('click', function(e) {
-    var sidebar = document.querySelector('.sidebar');
-    var navToggle = document.querySelector('.nav-toggle');
-
-    navToggle.classList.toggle("active");
-    var style = window.getComputedStyle(sidebar);
-    sidebar.style.display = style.display === 'none' ? 'block' : 'none';
-});
-
-inputScrape.addEventListener('focus', function(event){
-    this.value = "";
-}); //optionally clear on 'beforepaste'
-
-var Story = {};
-document.addEventListener("DOMContentLoaded", function(event) {
-    openDb(function() {
-        updateStoryList();
-    });
-});
-
-btnScrape.addEventListener('click', StartScrap);
-
-nextChapterLink.addEventListener('click', function(e) {
-    if (this.classList.contains('disable'))
-        return;
-
-    Story.currentChapter += 1;
-    getCurrentChapter();
-    updateNav();
-    e.preventDefault();
-});
-
-previousChapterLink.addEventListener('click', function(e) {
-    if (this.classList.contains('disable'))
-        return;
-
-    if (Story.currentChapter > 1) {
-        Story.currentChapter -= 1;
-        getCurrentChapter();
-        updateNav();
-    }
-    e.preventDefault();
-});
-
-function updateNav() {
-    var chaptersSelect = document.querySelector('#chapters-select');
-    chaptersSelect.selectedIndex = Story.currentChapter - 1;
-    if (Story.currentChapter > 1) {
-        previousChapterLink.classList.remove('disable');
-
-        if (Story.currentChapter == Story.chapters) {
-            nextChapterLink.classList.add('disable');
-        } else {
-            nextChapterLink.classList.remove('disable');
-        }
-    } else if (Story.currentChapter == 1) {
-        previousChapterLink.classList.add('disable');
-        if (Story.chapters > 1) {
-            nextChapterLink.classList.remove('disable');
-        }
-    }
-}
-
-function StartScrap(e) {
-    const parsedInput = parseUserInput(inputScrape.value, supportedSites);
-    const yqlStringLinks = yqlStringBuilder(parsedInput.href, parsedInput.xpathLinks);
-    const yqlStringChapters = new Set();
-    console.log(parsedInput);
-    var title = document.querySelector('#title');
-
-        Story.name = parsedInput.storyName;
-        title.textContent = Story.name;
-        makeRequest('GET', yqlStringLinks).then(function(data)
-        {
-            var numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
-            chaptersTotal.textContent = numberOfChapters;
-
-            Story.chapters = numberOfChapters;
-            Story.data = data;
-            Story.parsedInput = parsedInput;
-            Story.currentChapter = 1;
-            Story.id = parsedInput.storyId;
-            Story.href = parsedInput.href;
-
-            populateChaptersSelectOptions();
-            populateChapters();
-            // createStoryFolder(parsedInput.storyId);
-
-        }).catch(function(err) {
-            console.log('Request failed', err);
+const getFirstChapter = function(data) {
+    console.log("getFirstChapter beforebegin");
+    return makeRequest(data.chapterLinks[0])
+        .then(function(response) {
+            //console.log("getFirstChapter, response", response);
+            return upsertChapter(
+                    data.idStory + ".1",
+                    data.parsedInput.storyName,
+                    data.parsedInput.href,
+                    response,
+                    data.numberOfChapters
+                )
+                .then(function() {
+                    // data.chapterLinks.shift();
+                    // data.chapterLinks = data.chapterLinks;
+                    //console.log("getFirstChapter, response", response);
+                    //update sidebar, update nav
+                    console.log("adadsa", data);
+                    return data;
+                });
         });
-}
+};
 
-function populateChaptersSelectOptions() {
-    const chaptersSelect = document.querySelector('#chapters-select');
-    const navigation = document.querySelector('.navigation');
-    chaptersSelect.innerHTML = "";
-    const optionHtml = document.createDocumentFragment();
-    for (let i = 1; i <= Story.chapters; i++) {
-        optionHtml.appendChild(new Option("Chapter: " + i, i));
-
-        // chaptersSelect.appendChild(opt);
-    }
-    // chaptersSelect.insertAdjacentHTML('afterbegin', optionHtml);
-    // const reader = document.querySelector('.reader');
-    // console.log(navigation.cloneNode(true));
-    // console.log(reader);
-    // reader.insertAdjacentElement('beforeend', navigation.cloneNode(true));
-    chaptersSelect.appendChild(optionHtml);
-    chaptersSelect.addEventListener('change', function() {
-        goToChapter(this.value);
+const getAllChapters = function(data) {
+    delete data.chapterLinks[0];
+    console.log("getAllChapters, data", data.chapterLinks);
+    console.log("getAllChapters, inside loop, data", data);
+    return data.chapterLinks.map(function(response, i) {
+        return makeRequest(data.chapterLinks[i])
+            .then(function(response) {
+                return upsertChapter(
+                        data.idStory + "." + (i + 1),
+                        data.parsedInput.storyName,
+                        data.parsedInput.href,
+                        response,
+                        data.numberOfChapters)
+                    .then(function() {
+                        //update sidebar, update nav
+                        console.log("getAllChapters -> after save each chapter");
+                        return data;
+                    });
+            });
     });
-}
+};
+
+const testReturn = function(data) {
+    const promise = new Promise(function(resolve, reject) {
+        console.log("testReturn, data: ", data);
+        resolve(data);
+    });
+    return promise;
+};
+
+//function StartScrap(e) {
+//    const parsedInput = parseUserInput(inputScrape.value, supportedSites);
+//    const yqlStringLinks = yqlStringBuilder(parsedInput.href, parsedInput.xpathLinks);
+//    const yqlStringChapters = new Set();
+//    console.log(parsedInput);
+//    const title = document.querySelector("#title");
+
+//    Story.name = parsedInput.storyName;
+//    title.textContent = Story.name;
+//    makeRequest("GET", yqlStringLinks).then(function(data)
+//    {
+//        const numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
+//        chaptersTotal.textContent = numberOfChapters;
+
+//        Story.chapters = numberOfChapters;
+//        Story.data = data;
+//        Story.parsedInput = parsedInput;
+//        Story.currentChapter = 1;
+//        Story.id = parsedInput.storyId;
+//        Story.href = parsedInput.href;
+
+//        populateChaptersSelectOptions();
+//        populateChapters();
+//        // createStoryFolder(parsedInput.storyId);
+
+//    }).catch(function(err) {
+//        console.log("Request failed", err);
+//    });
+//};
 
 function populateChapters() {
-    for (var i = 1; i <= Story.chapters; i++) {
+    for (let i = 1; i <= Story.chapters; i++) {
         const url = Story.parsedInput.hrefEmptyChapter + i,
             xpath = Story.parsedInput.xpathStory;
 
         const nextStoryPath = Story.id + "." + i;
-        makeRequest('GET', yqlStringBuilder(url, xpath, 'xml'))
+        makeRequest("GET", yqlStringBuilder(url, xpath, "xml"))
             .then(function(data) {
-                addOrReplaceStory(nextStoryPath, Story.name, Story.href,
-                    data, Story.chapters);
+                upsertChapter(nextStoryPath,
+                    Story.name,
+                    Story.href,
+                    data,
+                    Story.chapters);
                 updateStoryList();
-                //if f1, f2, auth => sendChapterObjectToGoogleDrive
                 const obj = {
-                    "ChapterId": nextStoryPath,
+                    "storyChapterId": nextStoryPath,
                     "StoryName": Story.name,
                     "Url": Story.href,
                     "Content": data,
                     "NumberOfChapters": Story.chapters
                 };
-                // uploadChapter(obj, globalStoryFolderGoogleId);
             })
             .catch(function(err) {
-                console.log('Request failed', err);
-            })
-    }
-
-    getCurrentChapter();
-}
-
-function closeMobileSidebar() {
-    var sidebar = document.querySelector('.sidebar');
-    var navToggle = document.querySelector('.nav-toggle');
-
-    if (navToggle.classList.contains('active')) {
-        navToggle.classList.remove("active");
-        sidebar.style.display = 'none';
-    }
-}
-
-function updateStoryList() {
-    populateStoryArray(function(data){
-        const strList = document.querySelector(".sidebar-list");
-        strList.innerHTML = '';
-        data.forEach(function(obj, i) {
-          strList.insertAdjacentHTML('beforeend', `
-            <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.StoryName}">
-                <span class="sidebar-list--text">${obj.StoryName} - ${obj.NumberOfChapters} chapters</span>
-            </a>`);
-        });
-
-        const storySelector = document.querySelectorAll('.story-sel');
-        for (var i = storySelector.length - 1; i >= 0; i--) {
-            storySelector[i].addEventListener('click', function(e) {
-                console.log(this.dataset.story);
-
-                var s = this.dataset.story;
-
-                Story.name = data[s].StoryName;
-                Story.id = data[s].ChapterId.split(".")[0];
-                Story.chapters = data[s].NumberOfChapters;
-                chaptersTotal.textContent = Story.chapters;
-                title.textContent = Story.name;
-                Story.currentChapter = 1;
-
-                closeMobileSidebar();
-                getCurrentChapter();
-                updateNav();
-                populateChaptersSelectOptions();
-
-                displayScreen();
+                console.log("Request failed", err);
             });
-        }
-    });
-}
+    }
 
-function goToChapter(chapter) {
-    Story.currentChapter = chapter;
-    updateNav();
     getCurrentChapter();
-}
+};
 
-function getCurrentChapter() {
-    const nextStoryPath = Story.id + "." + Story.currentChapter;
-    getChapter(nextStoryPath);
-}
-
-// indexedDbShowButton.addEventListener("click", function(){
-//     populateStoryArray(function (data){ //TODO: Raphael, passar o callback aqui para montar o menu lateral?
-//         // mas não em um click né, tem que fazer isso depois que a conexão com DB tiver aberto de fato.
-//         data.forEach(function(obj) {
-//           storyList.insertAdjacentHTML('beforeend', `<div class="chapterBox">${obj.StoryName}</div>`);
-//         });
-//   });
-//     //displayStoryList(getObjectStore(DB_STORE_NAME, 'readwrite'));
-// });
-
-const supportedSites = new Map([
-    ["www.fanfiction.net", {
-        xpathLinks: '//*[@id="chap_select"]',
-        xpathStory: '//*[@id="storytext"]'
-    }],
-    ["m.fanfiction.net", {
-        xpathLinks: '//*[@id="jump"]',
-        xpathStory: '//*[@id="storytext"]',
-        jsonNChapters: '.query.results.select[0].option.length'
-    }],
-    ["m.fanfiction.net", {
-        xpathLinks: '//*[@id="jump"]',
-        xpathStory: '//*[@id="storytext"]',
-        jsonNChapters: '.query.results.select[0].option.length'
-    }],
-    ["www.fictionpress.com", {
-        xpathLinks: '//*[@id="chap_select"]',
-        xpathStory: '//*[@id="storytext"]',
-        jsonNChapters: '.query.results.select[0].option.length'
-    }],
-    ["m.fictionpress.com", {
-        xpathLinks: '//*[@id="d_menu"]/div/form',
-        xpathStory: '//*[@id="storytext"]',
-        jsonNChapters: '.query.results.select[0].option.length'
-    }],
-]);
+function parseUrl(url){
+    const a = document.createElement("a");
+    a.href = url;
+    const hostArrDot = a.host.split(".");
+    const hrefArrSlash = a.href.split("/");
+    if (!hostArrDot[0] || !hostArrDot[1]) {
+        console.log(`There's a problem in the story link`);
+    }
+    if (!hrefArrSlash[4]) {
+        console.log(`Story ID could not be parsed from link`);
+    }
+    that.scrape.parsedInput = {
+        origin: a.origin,
+        host: a.host,
+        href: a.href,
+        hostname: a.hostname,
+        pathname: a.pathname,
+        port: a.port,
+        protocol: a.protocol,
+        search: a.search,
+        hash: a.hash,
+        xpathLinks: "",
+        xpathStory: "",
+        name: hostArrDot[0] == "www" || hostArrDot[0] == "m" ? hostArrDot[1] : hostArrDot[0],
+        hrefEmptyChapter: a.origin + `/s/${hrefArrSlash[4]}/`,
+        storyId: hrefArrSlash[4],
+        storyName: hrefArrSlash[6]
+    };
+};
 
 function parseUserInput(url, supSites) {
     if (!url) {
         console.log(`Couldn't find url to be parsed`);
         return;
     }
-    const input = parseUrl(url);
-    if (!supSites.has(input.hostname)) {
+    parseUrl(url);
+    const input = that.scrape.parsedInput;
+    if (!supSites.has(that.hostname)) {
         console.log(`I'm sorry, '${input.value}' not found in our supported sites list`);
         return;
     }
@@ -292,78 +168,78 @@ function parseUserInput(url, supSites) {
     console.log(`Site ${input.name} successfully detected`);
     console.log(JSON.stringify(input, undefined, 2));
     return input;
-}
+};
 
-function yqlStringBuilder(parsedUrl, xpath, format = 'json') {
+function yqlStringBuilder(parsedUrl, xpath, format = "json") {
     if (!parsedUrl || !xpath) {
         console.log(`yqlStringBuilder input problem:
                       parsedUrl: ${parsedUrl}
                       xpath: ${xpath}`);
         return;
     }
-    const yql = 'https://query.yahooapis.com/v1/public/yql?' + 'q=' + encodeURIComponent(`select * from html where url=@url and xpath='${xpath}'`) + '&url=' + encodeURIComponent(parsedUrl) + `&crossProduct=optimized&format=${format}`;
-
-    if (!yql) {
-        console.log(`something went wrong while building yqlString:
-                      yqlQueryString: ${yql}
-                      yqlQuery: ${yqlQuery}`);
-    }
+    const yql = "https://query.yahooapis.com/v1/public/yql?" + "q=" + encodeURIComponent(`select * from html where url=@url and xpath='${xpath}'`) + "&url=" + encodeURIComponent(parsedUrl) + `&crossProduct=optimized&format=${format}`;
     return yql;
-}
+};
 
-function makeRequest(method, url) {
-    return new Promise(function(resolve, reject) {
-        const xhr = new XMLHttpRequest();
-        console.log(`making request with url: ${url}`);
-        xhr.open(method, url);
-        xhr.onload = function() {
-            if (this.status >= 200 && this.status < 300) {
-                resolve(xhr.response);
-            } else {
-                reject({
-                    status: this.status,
-                    statusText: xhr.statusText
-                });
-            }
-        };
-        xhr.onerror = function() {
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
-        };
-        xhr.send();
+const ScrapeButtonStarter = new Promise((resolve, reject) => {
+    resolve();
+});
+
+    //const ScrapeButtonStarter2 = new Promise((resolve, reject) => {
+
+const ScrapeButtonStarter2 = function() {
+    return new Promise((resolve, reject) => {
+        parseUserInput(inputScrape.value, supportedSites);
+        that.scrape.yqlGetChapterLinks = yqlStringBuilder(that.scrape.parsedInput.href,
+            that.scrape.parsedInput.xpathLinks);
+        if (!that.scrape.yqlAllChapterLinks) {
+            console.log("StartScrapingAsync reject");
+            reject();
+        }
+        const title = document.querySelector("#title");
+        title.textContent = that.scrape.parsedInput.storyName;
+        console.log("StartScrapingAsync resolve");
+        resolve({ method: "GET", url: that.scrape.yqlAllChapterLinks });
     });
-}
-
-const parseUrl = (function() {
-    const a = document.createElement('a');
-    return function(url) {
-        a.href = url;
-        hostArrDot = a.host.split('.');
-        hrefArrSlash = a.href.split('/');
-        if (!hostArrDot[0] || !hostArrDot[1]) {
-            console.log(`There's a problem in the story link`);
+};
+const getStoryInfo = function(data) {
+    console.log("getStoryInfo, data:", data);
+    return makeRequest(data);
+};
+const parseStoryInfo = function(data) {
+    const promise = new Promise((resolve, reject) => {
+        const numberOfChapters = (JSON.parse(data)).query.results.select[0].option.length;
+        if (numberOfChapters <= 0) {
+            reject();
         }
-        if (!hrefArrSlash[4]) {
-            console.log(`Story ID could not be parsed from link`);
-        }
-        return {
-            origin: a.origin,
-            host: a.host,
-            href: a.href,
-            hostname: a.hostname,
-            pathname: a.pathname,
-            port: a.port,
-            protocol: a.protocol,
-            search: a.search,
-            hash: a.hash,
-            xpathLinks: '',
-            xpathStory: '',
-            name: hostArrDot[0] == 'www' || hostArrDot[0] == 'm' ? hostArrDot[1] : hostArrDot[0],
-            hrefEmptyChapter: a.origin + `/s/${hrefArrSlash[4]}/`,
-            storyId: hrefArrSlash[4],
-            storyName: hrefArrSlash[6]
+        const storyObj = {
+            numberOfChapters: numberOfChapters,
+            data: data,
+            parsedInput: parsedInput,
+            currentChapter: 1,
+            idStory: parsedInput.storyId,
+            href: parsedInput.href,
+            chapterLinks: []
         };
-    }
-})();
+        console.log("parseStoryInfo, data"); //, data);
+        resolve(storyObj);
+    });
+    return promise;
+};
+const buildChapterPromises = function(data) {
+    const promise = new Promise(function(resolve, reject) {
+        for (let i = 1; i <= 3; i++) { //data.numberOfChapters; i++) {
+            const yqlStringChapter = yqlStringBuilder(
+                data.parsedInput.hrefEmptyChapter + i,
+                data.parsedInput.xpathStory,
+                "xml");
+            data.chapterLinks.push({ method: "GET", url: yqlStringChapter });
+        };
+        console.log("buildChapterPromises, data", data);
+        if (!data || !data.chapterLinks || data.chapterLinks.length <= 0) {
+            reject(data);
+        }
+        resolve(data);
+    });
+    return promise;
+};
