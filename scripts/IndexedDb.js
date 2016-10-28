@@ -95,31 +95,36 @@ function populateStoryArray(onCompleteCallbackFunction) {
 * @param {json object} content
 * @param {string} numberOfChapters
 */
-function upsertChapter(storyChapterId, storyName, chapterUrl, content, numberOfChapters) {
-    const obj = {
-        "storyChapterId": storyChapterId,
-        "StoryName": storyName,
-        "ChapterUrl": chapterUrl,
-        "Content": content,
-        "NumberOfChapters": numberOfChapters
-    };
+const upsertChapter = function(storyChapterId, storyName, chapterUrl, content, numberOfChapters) {
+    const promise = new Promise((resolve, reject) => {
+        const obj = {
+            "storyChapterId": storyChapterId,
+            "StoryName": storyName,
+            "ChapterUrl": chapterUrl,
+            "Content": content,
+            "NumberOfChapters": numberOfChapters
+        };
 
-    const store = getObjectStore(DB_STORE_NAME, "readwrite");
-    let req;
-    try {
-        req = store.put(obj);
-    } catch (e) {
-        if (e.name == "DataCloneError")
-            displayActionFailure("This engine doesn't know how to clone a Blob, " +
-                                 "use Firefox");
-        throw e;
-    }
-    req.onsuccess = function (evt) {
-        console.log("Insertion in DB successful");
-    };
-    req.onerror = function () {
-        console.error("addStory error", this.error);
-    };
+        const store = getObjectStore(DB_STORE_NAME, "readwrite");
+        let req;
+        try {
+            req = store.put(obj);
+        } catch (e) {
+            if (e.name == "DataCloneError")
+                displayActionFailure("This engine doesn't know how to clone a Blob, " +
+                    "use Firefox");
+            throw e;
+        }
+        req.onsuccess = function(evt) {
+            console.log("Insertion in DB successful");
+            resolve();
+        };
+        req.onerror = function() {
+            console.error("addStory error", this.error);
+            reject(this.error);
+        };
+    });
+    return promise;
 }
 
 /**

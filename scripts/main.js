@@ -20,14 +20,18 @@ inputScrape.addEventListener("focus", function (e) {
     this.value = "";
 }); //optionally clear on 'beforepaste'
 
+//ScrapeButtonStarter();
 btnScrape.addEventListener("click",
-    ScrapeButtonStarter
-        .then(getStoryInfo)
-        //.then(parseStoryInfo)
-        //.then(buildChapterPromises)
-        //.then(getFirstChapter)
-        //.then(getAllChapters)
-        //.then(populateDropDownMenu)
-);
-
+    function() {
+        ScrapeButtonStarter()
+            .then(getStoryInfo)
+            .then(parseStoryInfo)
+            .then(buildChapterPromises)
+            .then(getFirstChapter)
+            .then(getAllChapters)
+            //.then(populateDropDownMenu) 
+            .catch(function(reason) {
+                console.log("inside catch, reason: ", reason);
+            });
+    });
 

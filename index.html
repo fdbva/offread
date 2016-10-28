@@ -25,8 +25,8 @@
         <input type="button" id="authorizeButton" style="display: none" value="Authorize" />
         <div class="sidebar-input">
             <input id="input-scrape" type="text" placeholder="Insert a valid Url...." value="https://www.fictionpress.com/s/2961893/1/Mother-of-Learning">
-            <button class="btn-scrape" id="btn-scrape" >Scrape</button>
-            <button class="btn-scrape" id="btn-scrape-drive" >
+            <button class="btn-scrape" id="btn-scrape">Scrape</button>
+            <button class="btn-scrape" id="btn-scrape-drive">
                 Scrape&<img class="google-drive-icon" src="images/Google_Drive_Logo.svg">
             </button>
         </div>
@@ -49,20 +49,19 @@
                 <p>Chapters: <span id="chapters-total">0</span></p>
             </div>
             <div class="navigation">
-                <select id="chapters-select" class="chapters" title="Chapter Navigation" name="chapter">
-
-                </select>
+                <select id="chapters-select" class="chapters" title="Chapter Navigation" name="chapter"></select>
                 <a class="btn prev disable" type="button">< Prev</a>
                 <a class="btn next" type="button">Next &gt;</a>
             </div>
             <div class="text" id="storyList"></div>
         </div>
     </section>
+    <script src="scripts/bluebird.js"></script>
+    <script src="scripts/pace.js"></script>
     <script src="scripts/globals.js"></script>
     <script src="scripts/userInterface.js"></script>
     <script src="scripts/gapi-auth.js"></script>
-    <script type="text/javascript" src="https://apis.google.com/js/client.js"></script><!--?onload=handleClientLoad"></script>-->
-    <script src="scripts/pace.js"></script>
+    <!--<script type="text/javascript" src="https://apis.google.com/js/client.js"></script><!--?onload=handleClientLoad"></script>-->-->
     <script src="scripts/Scraping.js"></script>
     <script src="scripts/IndexedDb.js"></script>
     <script src="scripts/main.js"></script>

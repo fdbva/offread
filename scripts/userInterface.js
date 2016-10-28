@@ -44,7 +44,7 @@ function populateChaptersSelectOptions() {
 const populateDropDownMenu = function (data) {
     const promise = new Promise(function (resolve, reject) {
         console.log("populateDropDownMenu, data:", data);
-        for (let i = 1; i <= Story.chapters; i++) {
+        for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
             const opt = document.createElement("option");
             opt.value = i;
             opt.innerHTML = "Chapter: " + i;

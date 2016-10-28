@@ -89,7 +89,7 @@ const supportedSites = new Map([
         xpathLinks: '//*[@id="d_menu"]/div/form',
         xpathStory: '//*[@id="storytext"]',
         jsonNChapters: ".query.results.select[0].option.length"
-    }],
+    }]
 ]);
 
 function makeRequest(data) {
