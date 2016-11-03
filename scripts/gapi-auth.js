@@ -3,42 +3,128 @@
 /*eslint prefer-const: "error"*/
 /*eslint-env es6*/
 
+
+const StartGoogleDrive = function () {
+    const promise = new Promise(function (resolve, reject) {
+        console.log("StartGoogleDrive started");
+        var script = document.createElement('script'),
+            loaded;
+        script.setAttribute('src', "https://apis.google.com/js/client.js");
+        
+        script.onreadystatechange = script.onload = function () {
+            if (!loaded) {
+                setTimeout(function() { resolve(); }, 500);
+            };
+            loaded = true;
+        };
+        document.getElementsByTagName('head')[0].appendChild(script);
+        //JS.load("https://apis.google.com/js/client.js", function () {
+        //    //Do your thing.
+        //    console.log("onreadystate");
+        //    resolve(setTimeout(function() {
+        //        gapi.auth.authorize(
+        //                { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true },
+        //                handleAuthResult)
+        //            .then(console.log("checkAuth"));
+        //    }, 500));
+                
+        //});
+        //var script = document.createElement('script');
+        //script.src = "https://apis.google.com/js/client.js";
+
+        //script.addEventListener('load', function () {
+        //    resolve(script);
+        //}, false);
+        //script.onreadystatechange = script.onload = function () {
+        //    console.log("onreadystate");
+        //    gapi.auth.authorize(
+        //{ 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true },
+        //handleAuthResult).then(alert("checkAuth"));
+        //    console.log("after onreadystate");
+        //    }
+
+        //script.addEventListener('error', function () {
+        //    reject(script);
+        //    console.log('StartGoogleDrive rejected');
+        //}, false);
+
+        //document.body.appendChild(script);
+    });
+    return promise;
+};
+//var JS = {
+//    load: function (src, callback) {
+//        var script = document.createElement('script'),
+//            loaded;
+//        script.setAttribute('src', src);
+//        if (callback) {
+//            script.onreadystatechange = script.onload = function () {
+//                if (!loaded) {
+//                    callback();
+//                }
+//                loaded = true;
+//            };
+//        }
+//        document.getElementsByTagName('head')[0].appendChild(script);
+//    }
+//};
+
 /**
  * Called when the client library is loaded to start the auth w.
  */
-function handleClientLoad() {
-    window.setTimeout(checkAuth, 1);
-}
+//function handleClientLoad() {
+//    const promise = new Promise(function(resolve, reject) {
+//        console.log("handleClientLoad");
+//        window.setTimeout(resolve(checkAuth), 1);
+//    });
+//    return promise;
+//}
 /**
  * Check if the current user has authorized the application.
  */
 function checkAuth() {
-    gapi.auth.authorize(
-        { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true },
-        handleAuthResult);
+    return Promise.resolve(gapi.auth.authorize(
+            { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true })
+        .then(function(response) {
+            console.log("checkAuth");
+            handleAuthResult(response);
+        }));
+};
 
-}
 /**
  * Called when authorization server replies.
  *
  * @param {Object} authResult Authorization result.
  */
 function handleAuthResult(authResult) {
-    const authButton = document.getElementById("authorizeButton");
-    authButton.style.display = "none";
-    if (authResult && !authResult.error) {
-        // Access token has been successfully retrieved, requests can be sent to the API.
+    const promise = new Promise(function(resolve, reject) {
+        const authButton = document.getElementById("authorizeButton");
         authButton.style.display = "none";
-        gapi.client.load("drive", "v2", function () { createAppFolder(); });;
-    } else {
-        // No access token could be retrieved, show the button to start the authorization flow.
-        authButton.style.display = "block";
-        authButton.onclick = function () {
-            gapi.auth.authorize(
-                { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false },
-                handleAuthResult);
-        };
-    }
+        if (authResult && !authResult.error) {
+            // Access token has been successfully retrieved, requests can be sent to the API.
+            console.log("authResult success");
+            authButton.style.display = "none";
+            return gapi.client.load("drive", "v2").then(function(response) { return resolve(response); }, function (reason) { return reject(reason); });
+                //,
+                //function() {
+                //    gapi.client.drive.files.list(
+                //            { 'q': "mimeType = 'application/vnd.google-apps.folder'" })
+                //        .then(function (resp) {
+                //            console.log("gapi.client.drive.files.list then, resp: ", resp);
+                //            resolve(resp.result.items);
+                //        });
+                //});//.then(function(reason) { console.log("handleAuthResult reason", reason); return setTimeout(resolve(), 1000) }, function (reason) { return reject(reason) });
+        } else {
+            // No access token could be retrieved, show the button to start the authorization flow.
+            console.log("authResult need authorization click");
+            authButton.style.display = "block";
+            authButton.onclick = function() {
+                return gapi.auth.authorize(
+                    { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false }).then(function (response) { return resolve(response); }, function (reason) { return reject(reason); });;
+            };
+        }
+    });
+    return promise;
 }
 /**
  * Start the file upload.
@@ -46,13 +132,22 @@ function handleAuthResult(authResult) {
  * @param {Object} evt Arguments from the file selector.
  */
 function uploadFile(evt) {
-    gapi.client.load("drive", "v2", function () {
-        //listFiles("OffWebReader", "TesteMagico.2", appState);
+    const promise = new Promise(function(resolve, reject) {
+        gapi.client.load("drive",
+            "v2",
+            function () {
+                resolve();
+                //listFiles("OffWebReader", "TesteMagico.2", appState);
 
-        //listFilesFolder("OffWebReader", id, null);           
-        //setTimeout(function(){ listFiles(storyName, "TesteMagico.4", appState); }, 4000);
-        //setTimeout(function(){ deleteFile(idStory); }, 7000);                        
+                //listFilesFolder("OffWebReader", id, null);           
+                //setTimeout(function(){ listFiles(storyName, "TesteMagico.4", appState); }, 4000);
+                //setTimeout(function(){ deleteFile(idStory); }, 7000);                        
+            },
+            function() {
+                reject();
+            });
     });
+    return promise;
 }
 /**
  * Insert new file.
@@ -149,7 +244,7 @@ function createStoryFolderHelper(files, storyName, parent) {
     data.parents = [{ "id": globalAppFolderGoogleId }];
     data.mimeType = "application/vnd.google-apps.folder";
     gapi.client.drive.files.insert({ 'resource': data }).execute(function (fileList) {
-        console.log("createStoryFolderHelper execute", fileList.id)
+        console.log("createStoryFolderHelper execute", fileList.id);
         globalStoryFolderGoogleId = fileList.id;
         console.log(fileList);
         populateChapters();
@@ -225,3 +320,12 @@ function listFiles(folderName, parent, callback) {
         }
     });
 }
+
+function listFilesAsync(resp) {
+        
+        return gapi.client.drive.files.list(
+                { 'q': "mimeType = 'application/vnd.google-apps.folder'" })
+            .then(function(response) {
+                Promise.resolve(response.items);
+            }, function (reason) { Promise.reject(reason); });
+};

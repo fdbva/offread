@@ -5,9 +5,12 @@
 /*eslint-env es6*/
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    openDb(function () { //rever callback to promise
-        updateStoryList();
-    });
+    openDb()
+        .then(getListOfStoriesInDb)
+        .then(updateSideBarMenu)
+        .catch(function(reason) {
+            console.log("DOMContentLoaded catch, reason: ", reason);
+        });
 });
 //btnScrape.addEventListener("click", StartScrap);
 aboutbtn.addEventListener("click", displayScreen.bind(this, "about"));
@@ -28,10 +31,35 @@ btnScrape.addEventListener("click",
             .then(parseStoryInfo)
             .then(buildChapterPromises)
             .then(getFirstChapter)
+            .then(getListOfStoriesInDb) //TODO: optimize,
+            .then(updateSideBarMenu)    //TODO: without going to DB? Don't need to get everything again?
             .then(getAllChapters)
+            .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
+            .then(updateSideBarMenu)    //TODO: not necessary to list and update again
             //.then(populateDropDownMenu) 
             .catch(function(reason) {
                 console.log("inside catch, reason: ", reason);
             });
     });
-
+btnScrapeAndDrive.addEventListener("click",
+    function () {
+        ScrapeButtonStarter()
+            //.then(getStoryInfo)
+            //.then(parseStoryInfo)
+            //.then(buildChapterPromises)
+            //.then(getFirstChapter)
+            //.then(getListOfStoriesInDb) //TODO: optimize,
+            //.then(updateSideBarMenu)    //TODO: without going to DB? Don't need to get everything again?
+            //.then(getAllChapters)
+            //.then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
+            //.then(updateSideBarMenu)    //TODO: not necessary to list and update again
+            .then(StartGoogleDrive)
+            //.then(handleClientLoad)
+            .then(checkAuth)
+            .then(listFilesAsync)
+            //.then(handleAuthResult)
+            //.then(populateDropDownMenu) 
+            .catch(function (reason) {
+                console.log("inside catch, reason: ", reason);
+            });
+    });

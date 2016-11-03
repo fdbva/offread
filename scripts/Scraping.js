@@ -4,45 +4,59 @@
 /*eslint-env es6*/
 
 const getFirstChapter = function(data) {
-    console.log("getFirstChapter beforebegin");
-    return makeRequest(that.scrape.chapterLinksList[0])
-        .then(function(response) {
-            console.log("getFirstChapter makerequest.then, response: ", response != null);
-            return upsertChapter(
-                    that.scrape.parsedInput.storyId + ".1",
-                    that.scrape.parsedInput.storyName,
-                    that.scrape.parsedInput.hrefEmptyChapter+"/1",
-                    response,
-                    that.scrape.totalOfChapters
-                )
-                .then(function() {
-                    //that.scrape.chapterLinksList.shift();
-                    console.log("getFirstChapter upsert.then, response: ", response != null);
-                    //update sidebar, update nav
-                    Promise.resolve(data);
-                });
-        });
-};
-
-const getAllChapters = function(data) {
-    delete that.scrape.chapterLinksList[0];
-    console.log("getAllChapters, data", that.scrape.chapterLinksList);
-    return that.scrape.chapterLinksList.map(function(response, i) {
-        return makeRequest(that.scrape.chapterLinksList[i])
+    const promise = new Promise((resolve, reject) => {
+        console.log("getFirstChapter beforebegin");
+        return makeRequest(that.scrape.chapterLinksList[0])
             .then(function(response) {
+                console.log("getFirstChapter makerequest.then, response: ", response != null);
                 return upsertChapter(
-                        that.scrape.parsedInput.storyId + "." + (i + 1),
+                        that.scrape.parsedInput.storyId + ".1",
                         that.scrape.parsedInput.storyName,
-                        that.scrape.parsedInput.hrefEmptyChapter+`/${i+1}`,
+                        that.scrape.parsedInput.hrefEmptyChapter + "/1",
                         response,
-                        that.scrape.totalOfChapters)
+                        that.scrape.totalOfChapters
+                    )
                     .then(function() {
-                        //update sidebar, update nav (here it'll be done once for each chapter)
-                        console.log(`getAllChapters -> after save each chapter ${i+1}`);
-                        Promise.resolve(data);
+                        //that.scrape.chapterLinksList.shift();
+                        console.log("getFirstChapter upsert.then, response: ", response != null);
+                        //update sidebar, update nav
+                        resolve(data);
+                    })
+                    .catch(function(error) {
+                        console.log("getAllChapters reject, error: ", error);
+                        reject(error);
                     });
             });
     });
+    return promise;
+};
+
+const getAllChapters = function(data) {
+    const promise = new Promise((resolve, reject) => {
+        delete that.scrape.chapterLinksList[0];
+        console.log("getAllChapters, data", that.scrape.chapterLinksList);
+        return that.scrape.chapterLinksList.map(function(response, i) {
+            return makeRequest(that.scrape.chapterLinksList[i])
+                .then(function(response) {
+                    return upsertChapter(
+                            that.scrape.parsedInput.storyId + "." + (i + 1),
+                            that.scrape.parsedInput.storyName,
+                            that.scrape.parsedInput.hrefEmptyChapter + `/${i + 1}`,
+                            response,
+                            that.scrape.totalOfChapters)
+                        .then(function() {
+                            //update sidebar, update nav (here it'll be done once for each chapter)
+                            console.log(`getAllChapters -> after save each chapter ${i + 1}`);
+                            resolve(data);
+                        })
+                        .catch(function(error) {
+                            console.log("getAllChapters reject, error: ", error);
+                            reject(error);
+                        });
+                });
+        });
+    });
+    return promise;
 };
 
 //function StartScrap(e) {
@@ -75,28 +89,26 @@ const getAllChapters = function(data) {
 //    });
 //};
 
-const populateChapters = function() {
-    for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
-        const chapterUrl = that.scrape.parsedInput.hrefEmptyChapter + i;
-        const xpath = that.scrape.parsedInput.xpathStory;
-        const storyChapterId = that.scrape.parsedInput.storyId+`.${i}`;
-        makeRequest("GET", yqlStringBuilder(chapterUrl, xpath, "xml"))
-            .then(function(response) {
-                upsertChapter(storyChapterId,
-                    that.scrape.parsedInput.name,
-                    that.scrape.parsedInput.href,
-                    response,
-                    that.scrape.totalOfChapters);
-                //TODO: Raphael, vai percorrer o banco inteiro a cada capitulo adicionado?
-                updateStoryList();
-            })
-            .catch(function(err) {
-                console.log("Request failed", err);
-            });
-    }
+//const populateChapters = function() {
+//    for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
+//        const chapterUrl = that.scrape.parsedInput.hrefEmptyChapter + i;
+//        const xpath = that.scrape.parsedInput.xpathStory;
+//        const storyChapterId = that.scrape.parsedInput.storyId+`.${i}`;
+//        makeRequest("GET", yqlStringBuilder(chapterUrl, xpath, "xml"))
+//            .then(function(response) {
+//                upsertChapter(storyChapterId,
+//                    that.scrape.parsedInput.name,
+//                    that.scrape.parsedInput.href,
+//                    response,
+//                    that.scrape.totalOfChapters);
+//            })
+//            .catch(function(err) {
+//                console.log("Request failed", err);
+//            });
+//    }
 
-    getCurrentChapter();
-};
+//    getCurrentChapter();
+//};
 
 function parseUrl(url) {
     const a = document.createElement("a");
@@ -194,7 +206,7 @@ const parseStoryInfo = function (response) {
         that.scrape.totalOfChapters = totalOfChapters;
         that.scrape.currentChapter = 1;
         const storyObj = {
-            numberOfChapters: totalOfChapters,
+            totalOfChapters: totalOfChapters,
             data: response,
             parsedInput: that.scrape.parsedInput,
             currentChapter: 1,
@@ -209,7 +221,7 @@ const parseStoryInfo = function (response) {
 };
 const buildChapterPromises = function (data) {
     const promise = new Promise(function(resolve, reject) {
-        for (let i = 1; i <= 10; i++) { //data.numberOfChapters; i++) {
+        for (let i = 1; i <= 10; i++) { //data.totalOfChapters; i++) {
             const yqlGetChapter = yqlStringBuilder(
                 that.scrape.parsedInput.hrefEmptyChapter + i,
                 that.scrape.parsedInput.xpathStory,

@@ -28,6 +28,8 @@ that.scrape = {
     totalOfChapters: 0,
     currentChapter: 0
 }
+that.tempChapter = {};
+that.sidebarMenu = {};
 that.chapterObject = {
     storyChapterId: null,
     storyName: null,
@@ -36,11 +38,13 @@ that.chapterObject = {
     storyContent: null
 };
 that.storyInfo = {
-    
-}
+
+};
+let Story = {};
 
         //HTML hooks
 const btnScrape = document.querySelector("#btn-scrape");
+const btnScrapeAndDrive = document.querySelector("#btn-scrape-drive");
 const inputScrape = document.querySelector("#input-scrape");
 const resultsAnchor = document.querySelector("#resultsAnchor");
 const nextChapterLink = document.querySelector(".next");
@@ -52,8 +56,8 @@ const homebtn = document.querySelector(".home-btn");
 const aboutbtn = document.querySelector(".about-btn");
 
         //IndexedDb
-const DB_NAME = "offwebreader";
-const DB_VERSION = 3; // Use a long long for this value (don't use a float)
+const DB_NAME = "offread";
+const DB_VERSION = 6; // Use a long long for this value (don't use a float)
 const DB_STORE_NAME = "stories";
 let db;
 // Used to keep track of which view is displayed to avoid uselessly reloading it

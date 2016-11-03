@@ -122,38 +122,41 @@ function updateNav() {
     }
 }
 
-function updateStoryList() {
-    populateStoryArray(function (data) {
+function updateSideBarMenu() {
+    const promise = new Promise((resolve, reject) => {
+        var data = that.sidebarMenu;
         const strList = document.querySelector(".sidebar-list");
         strList.innerHTML = "";
-        data.forEach(function (obj, i) {
-            strList.insertAdjacentHTML("beforeend", `
-            <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.StoryName}">
-                <span class="sidebar-list--text">${obj.StoryName} - ${obj.NumberOfChapters} chapters</span>
-            </a>`);
+        data.forEach(function(obj, i) {
+            strList.insertAdjacentHTML("beforeend",
+                `
+        <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.StoryName}">
+            <span class="sidebar-list--text">${obj.StoryName} - ${obj.TotalOfChapters} chapters</span>
+        </a>`);
         });
 
         const storySelector = document.querySelectorAll(".story-sel");
         for (let i = storySelector.length - 1; i >= 0; i--) {
-            storySelector[i].addEventListener("click", function (e) {
-                console.log(this.dataset.story);
+            storySelector[i].addEventListener("click",
+                function(e) {
+                    console.log(this.dataset.story);
+                    const s = this.dataset.story;
+                    console.log(data[s]);
+                    Story.name = data[s].StoryName;
+                    Story.id = data[s].storyChapterId.split(".")[0];
+                    Story.chapters = data[s].totalOfChapters;
+                    chaptersTotal.textContent = Story.chapters;
+                    title.textContent = Story.name;
+                    Story.currentChapter = 1;
 
-                const s = this.dataset.story;
-
-                Story.name = data[s].StoryName;
-                Story.id = data[s].storyChapterId.split(".")[0];
-                Story.chapters = data[s].NumberOfChapters;
-                chaptersTotal.textContent = Story.chapters;
-                title.textContent = Story.name;
-                Story.currentChapter = 1;
-
-                closeMobileSidebar();
-                getCurrentChapter();
-                updateNav();
-                populateChaptersSelectOptions();
-
-                displayScreen();
-            });
-        }
+                    closeMobileSidebar();
+                    getCurrentChapter();
+                    updateNav();
+                    populateChaptersSelectOptions();
+                    displayScreen();
+                });
+        };
+        resolve();
     });
+    return promise;
 }
