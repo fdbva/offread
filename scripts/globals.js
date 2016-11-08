@@ -37,6 +37,7 @@ that.chapterObject = {
     chapterUrl: null,
     storyContent: null
 };
+that.chaptersArray = [];
 that.storyInfo = {
 
 };
@@ -45,6 +46,7 @@ let Story = {};
         //HTML hooks
 const btnScrape = document.querySelector("#btn-scrape");
 const btnScrapeAndDrive = document.querySelector("#btn-scrape-drive");
+const btnRestore = document.querySelector("#btn-restore");
 const inputScrape = document.querySelector("#input-scrape");
 const resultsAnchor = document.querySelector("#resultsAnchor");
 const nextChapterLink = document.querySelector(".next");
@@ -72,6 +74,7 @@ let globalAppFolderGoogleId = null;
 let globalStoryFolderGoogleId = null;
 let idStory = undefined;
 let storyName = undefined;
+that.driveItems = [];
 
 const supportedSites = new Map([
     ["www.fanfiction.net", {
@@ -121,4 +124,4 @@ function makeRequest(data) {
         };
         xhr.send();
     });
-}
+};

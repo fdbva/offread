@@ -9,12 +9,20 @@ const getFirstChapter = function(data) {
         return makeRequest(that.scrape.chapterLinksList[0])
             .then(function(response) {
                 console.log("getFirstChapter makerequest.then, response: ", response != null);
+                storyObj = {
+                    storyChapterId: that.scrape.parsedInput.storyId + ".1",
+                    storyName: that.scrape.parsedInput.storyName,
+                    totalOfChapters: that.scrape.totalOfChapters,
+                    chapterUrl: that.scrape.parsedInput.hrefEmptyChapter + "/1",
+                    storyContent: response
+                };
+                that.chaptersArray.push(storyObj);
                 return upsertChapter(
-                        that.scrape.parsedInput.storyId + ".1",
-                        that.scrape.parsedInput.storyName,
-                        that.scrape.parsedInput.hrefEmptyChapter + "/1",
-                        response,
-                        that.scrape.totalOfChapters
+                        storyObj.storyChapterId,
+                        storyObj.storyName,
+                        storyObj.chapterUrl,
+                        storyObj.storyContent,
+                        storyObj.totalOfChapters
                     )
                     .then(function() {
                         //that.scrape.chapterLinksList.shift();
@@ -31,25 +39,33 @@ const getFirstChapter = function(data) {
     return promise;
 };
 
-const getAllChapters = function(data) {
+const getAllChapters = (data) => {
     const promise = new Promise((resolve, reject) => {
         delete that.scrape.chapterLinksList[0];
         console.log("getAllChapters, data", that.scrape.chapterLinksList);
-        return that.scrape.chapterLinksList.map(function(response, i) {
+        return that.scrape.chapterLinksList.map((response, i) => {
             return makeRequest(that.scrape.chapterLinksList[i])
-                .then(function(response) {
+                .then((response) => {
+                    storyObj = {
+                    storyChapterId: that.scrape.parsedInput.storyId + "." + (i + 1),
+                    storyName: that.scrape.parsedInput.storyName,
+                    totalOfChapters: that.scrape.totalOfChapters,
+                    chapterUrl: that.scrape.parsedInput.hrefEmptyChapter + `/${i + 1}`,
+                    storyContent: response
+                    };
+                    that.chaptersArray.push(storyObj);
                     return upsertChapter(
-                            that.scrape.parsedInput.storyId + "." + (i + 1),
-                            that.scrape.parsedInput.storyName,
-                            that.scrape.parsedInput.hrefEmptyChapter + `/${i + 1}`,
-                            response,
-                            that.scrape.totalOfChapters)
-                        .then(function() {
+                        storyObj.storyChapterId,
+                        storyObj.storyName,
+                        storyObj.chapterUrl,
+                        storyObj.storyContent,
+                        storyObj.totalOfChapters)
+                        .then(() => {
                             //update sidebar, update nav (here it'll be done once for each chapter)
                             console.log(`getAllChapters -> after save each chapter ${i + 1}`);
                             resolve(data);
                         })
-                        .catch(function(error) {
+                        .catch((error) => {
                             console.log("getAllChapters reject, error: ", error);
                             reject(error);
                         });
@@ -192,7 +208,7 @@ function ScrapeButtonStarter() {
     });
     return promise;
 };
-const getStoryInfo = function(data) {
+const getStoryInfo = (data) => {
     return new Promise((resolve, reject) => {
         resolve(makeRequest(data));
     });
