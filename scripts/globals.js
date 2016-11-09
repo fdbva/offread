@@ -38,12 +38,11 @@ that.chapterObject = {
     storyContent: null
 };
 that.chaptersArray = [];
-that.storyInfo = {
+that.storyInfo = {};
 
-};
 let Story = {};
 
-        //HTML hooks
+//HTML hooks
 const btnScrape = document.querySelector("#btn-scrape");
 const btnScrapeAndDrive = document.querySelector("#btn-scrape-drive");
 const btnRestore = document.querySelector("#btn-restore");

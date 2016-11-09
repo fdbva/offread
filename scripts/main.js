@@ -36,7 +36,7 @@ btnScrape.addEventListener("click",
             .then(getAllChapters)
             .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
             .then(updateSideBarMenu)    //TODO: not necessary to list and update again
-            //.then(populateDropDownMenu) 
+            .then(populateSelectOptions) 
             .catch(function(reason) {
                 console.log("inside catch, reason: ", reason);
             });

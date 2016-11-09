@@ -54,6 +54,7 @@ const getAllChapters = (data) => {
                     storyContent: response
                     };
                     that.chaptersArray.push(storyObj);
+
                     return upsertChapter(
                         storyObj.storyChapterId,
                         storyObj.storyName,
@@ -96,8 +97,8 @@ const getAllChapters = (data) => {
 //        Story.id = parsedInput.storyId;
 //        Story.href = parsedInput.href;
 
-//        populateChaptersSelectOptions();
-//        populateChapters();
+       // populateChaptersSelectOptions();
+       // populateChapters();
 //        // createStoryFolder(parsedInput.storyId);
 
 //    }).catch(function(err) {

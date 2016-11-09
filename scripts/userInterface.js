@@ -142,9 +142,9 @@ function updateSideBarMenu() {
                     console.log(this.dataset.story);
                     const s = this.dataset.story;
                     console.log(data[s]);
+                    Story.chapters = that.chaptersArray.length;
                     Story.name = data[s].StoryName;
                     Story.id = data[s].storyChapterId.split(".")[0];
-                    Story.chapters = data[s].totalOfChapters;
                     chaptersTotal.textContent = Story.chapters;
                     title.textContent = Story.name;
                     Story.currentChapter = 1;
@@ -152,7 +152,7 @@ function updateSideBarMenu() {
                     closeMobileSidebar();
                     getCurrentChapter();
                     updateNav();
-                    populateChaptersSelectOptions();
+                    populateSelectOptions();
                     displayScreen();
                 });
         };

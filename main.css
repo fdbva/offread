@@ -109,6 +109,7 @@ body {
 .nav div:first-child {
     border-right: 1px solid #333;
     padding-right: 10px;
+    margin-left: 0px;
 }
 
 .reader .navigation {
@@ -234,6 +235,10 @@ body {
     padding: 10px;
 }
 
+.sidebar-input p {
+    display: flex;
+}
+
 .sidebar-input #input-scrape {
     margin-top: 30px;
     padding: 10px;
@@ -254,6 +259,12 @@ body {
 
 .google-drive-icon {
     width: 16px;
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: grayscale(100%);
+    filter: gray; /* IE 6-9 */
 }
 
 .mobile-nav {
