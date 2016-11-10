@@ -4,7 +4,7 @@
 /*eslint-env es6*/
 
 const that = this;
-
+that.batchRequestDelay = 3000;
 that.scrape = {
     parsedInput: {
         origin: null,
@@ -37,6 +37,8 @@ that.chapterObject = {
     chapterUrl: null,
     storyContent: null
 };
+that.retryCount = [];
+const maxRequestRetry = 5;
 that.chaptersArray = [];
 that.storyInfo = {
 
@@ -99,9 +101,9 @@ const supportedSites = new Map([
     }]
 ]);
 
-function makeRequest(data) {
-    if (!data) return;
+function makeRequest(data, retryCount = maxRequestRetry) {
     return new Promise(function (resolve, reject) {
+        if (!data || !data.url) reject();
         const xhr = new XMLHttpRequest();
         console.log(`making request with url: ${data.url}`);
         xhr.open(data.method, data.url);
@@ -109,18 +111,25 @@ function makeRequest(data) {
             if (this.status >= 200 && this.status < 300) {
                 resolve(xhr.response);
             } else {
+                if (retryCount) {
+                    setTimeout(makeRequest(data, --retryCount), 100);
+                } else {
+                    reject({
+                        status: this.status,
+                        statusText: xhr.statusText
+                    });
+                }
+            }
+        };
+        xhr.onerror = function () {
+            if (retryCount) {
+                setTimeout(makeRequest(data, --retryCount), 100);
+            } else {
                 reject({
                     status: this.status,
                     statusText: xhr.statusText
                 });
             }
-        };
-        xhr.onerror = function () {
-            //retry to download could enter here before rejecting
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
         };
         xhr.send();
     });

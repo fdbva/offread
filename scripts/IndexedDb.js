@@ -116,15 +116,15 @@ function getListOfStoriesInDb() {
 * @param {json object} content
 * @param {string} totalOfChapters
 */
-const upsertChapter = function(storyChapterId, storyName, chapterUrl, content, totalOfChapters) {
+const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, content, totalOfChapters) {
     const promise = new Promise((resolve, reject) => {
-        const obj = {
-            "storyChapterId": storyChapterId,
-            "StoryName": storyName,
-            "ChapterUrl": chapterUrl,
-            "Content": content,
-            "TotalOfChapters": totalOfChapters
-        };
+        //const obj = {
+        //    "storyChapterId": storyChapterId,
+        //    "StoryName": storyName,
+        //    "ChapterUrl": chapterUrl,
+        //    "Content": content,
+        //    "TotalOfChapters": totalOfChapters
+        //};
 
         const store = getObjectStore(DB_STORE_NAME, "readwrite");
         let req;
@@ -137,13 +137,35 @@ const upsertChapter = function(storyChapterId, storyName, chapterUrl, content, t
             throw e;
         }
         req.onsuccess = function(evt) {
-            console.log("Insertion in DB successful");
+            console.log(`Chapter ${obj.storyChapterId.split('.')[1]} from story ${obj.storyName} saved on IndexedDb`);
             resolve();
         };
         req.onerror = function() {
             console.error("addStory error", this.error);
             reject(this.error);
         };
+    });
+    return promise;
+}
+const upsertAllChaptersFromArray = () => {
+    const promise = new Promise((resolve, reject) => {
+        console.group("Saving on IndexedDb");
+        return that.chaptersArray.map((response, i) => {
+            return upsertChapter(that.chaptersArray[i])
+                .then((response) => {
+                    console.log("ALO");
+                });
+        });//.then((resp)=>{console.log("tchau")});
+        for (let i = 0; i < that.chaptersArray.length; i++) {
+            const storyObj = that.chaptersArray[i];
+            upsertChapter(storyObj.storyChapterId,
+                            storyObj.storyName,
+                            storyObj.chapterUrl,
+                            storyObj.storyContent,
+                            storyObj.totalOfChapters).then((resp)=> { console.log(i)});
+        }
+        resolve();
+        console.groupEnd();
     });
     return promise;
 }

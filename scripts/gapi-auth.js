@@ -21,57 +21,61 @@ const StartGoogleDrive = function () {
     });
     return promise;
 };
-
-function checkAuthImmediate() {
+function checkAuthGoogleDrive() {
+    return new Promise((resolve, reject) => {
+        authGoogleDriveRequest(true)
+            .then((response) => {
+                if (response && !response.error) {
+                    // Access token has been successfully retrieved, requests can be sent to the API.
+                    console.log("authResult success");
+                    loadDriveApi().then((response) => { resolve(response) });
+                } else {
+                    console.log("break promise chain");
+                    reject();
+                }
+            });
+    });
+}
+function forceAuthGoogleDrive() {
+    return new Promise((resolve, reject) => {
+        authGoogleDriveRequest(true)
+            .then((response) => {
+                const authButton = document.getElementById("authorizeButton");
+                authButton.style.display = "none";
+                if (response && !response.error) {
+                    // Access token has been successfully retrieved, requests can be sent to the API.
+                    console.log("authResult success");
+                    authButton.style.display = "none";
+                    loadDriveApi().then((response) => { resolve(response) });
+                } else {
+                    // No access token could be retrieved, show the button to start the authorization flow.
+                    console.log("authResult need authorization click");
+                    authButton.style.display = "block";
+                    authButton.onclick = () => {
+                        authGoogleDriveRequest(false);
+                    };
+                };
+            });
+    });
+}
+function authGoogleDriveRequest(immediate) {
     return new Promise((resolve, reject) => {
         gapi.auth.authorize(
-                { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': true },
+                { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': immediate },
                 undefined)
             .then((response) => {
-                console.log("checkAuth");
-                resolve(handleAuthResult(response));
+                console.log("authGoogleDriveRequest");
+                resolve(response);
             });
     });
 };
 
-function checkAuthNoImmediate() {
-    return new Promise((resolve, reject) => {
-        gapi.auth.authorize(
-                { 'client_id': CLIENT_ID, 'scope': SCOPES, 'immediate': false },
-                undefined)
-            .then((response) => {
-                console.log("checkAuth");
-                resolve(handleAuthResult(response));
-            });
-    });
-};
 function loadDriveApi() {
     const promise = new Promise((resolve, reject) => {
         gapi.client.load("drive", "v2", undefined).then((response) => {
             console.log("loadDriveApi");
             resolve(response);
         });
-    });
-    return promise;
-}
-
-function handleAuthResult(authResult) {
-    const promise = new Promise((resolve, reject) => {
-        const authButton = document.getElementById("authorizeButton");
-        authButton.style.display = "none";
-        if (authResult && !authResult.error) {
-            // Access token has been successfully retrieved, requests can be sent to the API.
-            console.log("authResult success");
-            authButton.style.display = "none";
-            loadDriveApi().then((response) => { resolve(response) });
-        } else {
-            // No access token could be retrieved, show the button to start the authorization flow.
-            console.log("authResult need authorization click");
-            authButton.style.display = "block";
-            authButton.onclick = () => {
-                checkAuthNoImmediate();
-            };
-        };
     });
     return promise;
 }
@@ -139,7 +143,7 @@ function uploadChapter(chapterObject, storyFolderGoogleId) {
             'body': multipartRequestBody
         });
         request.execute(function (arg) {
-            console.log("uploadChapterHelper, arg: ", arg);
+            console.info(`Chapter ${chapterObject.storyChapterId.split('.')[1]} from story ${chapterObject.storyName} uploaded to Google Drive`);
             resolve();
         });
     });
@@ -148,11 +152,10 @@ function uploadChapter(chapterObject, storyFolderGoogleId) {
 
 function deleteFolderById(id) {
     const promise = new Promise((resolve, reject) => {
-        console.log("DELETAR");
         gapi.client.drive.files.delete({
             'fileId': id
         }).execute((resp) => {
-            console.log(resp);
+            console.log(`Folder ${id} deleted from Google Drive`);
             resolve();
         });
     });
@@ -161,7 +164,6 @@ function deleteFolderById(id) {
 
 function createStoryFolderAsync(resp) {
     const promise = new Promise((resolve, reject) => {
-        console.log("folderName: ", that.scrape.parsedInput.storyName);
         gapi.client.drive.files.list(
             {
                 'q': "mimeType = 'application/vnd.google-apps.folder' and title = '" + that.scrape.parsedInput.storyId + "' and trashed = false"
@@ -188,7 +190,8 @@ function createStoryFolderAsyncHelper(resp) {
         data.mimeType = "application/vnd.google-apps.folder";
         gapi.client.drive.files.insert({ 'resource': data }).execute((fileList) => {
             globalStoryFolderGoogleId = fileList.id;
-            console.log(fileList);
+            console.log(`StoryFolder ${that.scrape.parsedInput.storyName} created`);
+            console.assert(fileList !== null, fileList);
             resolve();
         });
     });
@@ -197,12 +200,11 @@ function createStoryFolderAsyncHelper(resp) {
 
 function createAppFolderAsync(resp) {
     const promise = new Promise((resolve, reject) => {
-        console.log("test: ", gapi.client.drive);
         gapi.client.drive.files.list(
             {
                 'q': "mimeType = 'application/vnd.google-apps.folder' and title = 'OffWebReader' and trashed = false"
             }).then((response) => {
-                console.log("createAppFolderAsync, response: ", response);
+            console.log("createAppFolderAsync");//, response: ", response);
                 if (response.result.items.length === 0) {
                     console.log("CRIAR");
                     resolve(createAppFolderAsyncHelper());
@@ -245,7 +247,8 @@ function restoreFromGoogle() {
 };
 function downloadFiles(files) {
     const promise = new Promise((resolve, reject) => {
-        return files.map((response, i) => {
+        const concurrency = 49;
+        return files.map(function (response, i, [{concurrency: concurrency}])  {
             return makeRequestGoogleDrive(files[i].downloadUrl)
                 .then((response) => {
                     console.log("downloadFiles.then, response: ", response);
@@ -282,7 +285,7 @@ function downloadFiles(files) {
     });
     return promise;
 };
-function makeRequestGoogleDrive(downloadUrl) {
+    function makeRequestGoogleDrive(downloadUrl, retryCount = maxRequestRetry) {
     if (!downloadUrl) return;
     return new Promise(function (resolve, reject) {
         var accessToken = gapi.auth.getToken().access_token;
@@ -296,18 +299,26 @@ function makeRequestGoogleDrive(downloadUrl) {
                 appState = JSON.parse(xhr.responseText);
                 resolve(appState);
             } else {
+                if (retryCount) {
+                   setTimeout(makeRequest(data, --retryCount), 100);
+                } else {
+                    reject({
+                        status: this.status,
+                        statusText: xhr.statusText
+                    });
+                }
+            }
+        };
+        xhr.onerror = function () {
+            //retry to download could enter here before rejecting
+            if (retryCount) {
+                setTimeout(makeRequest(data, --retryCount), 100);
+            } else {
                 reject({
                     status: this.status,
                     statusText: xhr.statusText
                 });
             }
-        };
-        xhr.onerror = function () {
-            //retry to download could enter here before rejecting
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
         };
         xhr.send();
     });

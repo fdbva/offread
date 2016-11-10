@@ -51,11 +51,12 @@ btnScrapeAndDrive.addEventListener("click",
             .then(getListOfStoriesInDb) //TODO: optimize,
             .then(updateSideBarMenu)    //TODO: without going to DB? Don't need to get everything again?
             .then(getAllChapters)
+            .then(upsertAllChaptersFromArray)
             .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
             .then(updateSideBarMenu)    //TODO: not necessary to list and update again
             .then(StartGoogleDrive)
             //.then(handleClientLoad)
-            .then(checkAuthImmediate)//.then(function (resp) { test(resp); }))
+            .then(forceAuthGoogleDrive)//.then(function (resp) { test(resp); }))
             .then(createAppFolderAsync)
             .then(createStoryFolderAsync)
             .then(uploadAllStoryChapters)
@@ -68,7 +69,7 @@ btnScrapeAndDrive.addEventListener("click",
 btnRestore.addEventListener("click",
     () => {
         StartGoogleDrive()
-            .then(checkAuthImmediate)
+            .then(forceAuthGoogleDrive)
             .then(createAppFolderAsync)
             .then(restoreFromGoogle)
             .catch((reason) => {
