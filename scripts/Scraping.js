@@ -238,7 +238,7 @@ const parseStoryInfo = function (response) {
 };
 const buildChapterPromises = function (data) {
     const promise = new Promise(function(resolve, reject) {
-        for (let i = 1; i <= 10; i++) { //data.totalOfChapters; i++) {
+        for (let i = 1; i <= data.totalOfChapters; i++) {
             const yqlGetChapter = yqlStringBuilder(
                 that.scrape.parsedInput.hrefEmptyChapter + i,
                 that.scrape.parsedInput.xpathStory,
