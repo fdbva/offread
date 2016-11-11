@@ -30,23 +30,26 @@ function toggleSideBar() {
 
 function populateSelectOptions() {
     const promise = new Promise(function (resolve, reject) {
-        const select = document.querySelectorAll("#chapters-select");
+        const select = document.querySelectorAll(".chapters-select");
 
         select[0].innerHTML = "";
         select[1].innerHTML = "";
 
-        const optionHtml = document.createDocumentFragment();
+        const optionHtml = document.createDocumentFragment(),
+            optionHtml2 = document.createDocumentFragment();
         for (let i = 1; i <= Story.chapters; i++) {
             optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
+            optionHtml2.appendChild(new Option(`Chapter: ${i}`, i));
         }
 
         select[0].appendChild(optionHtml);
-        select[1].appendChild(optionHtml);
+        select[1].appendChild(optionHtml2);
         
         function changeFn(e) {
             console.log(this.value);
             goToChapter(this.value);
             e.preventDefault();
+            window.scrollTo(0, 0);
         };
 
         select[0].addEventListener("change", changeFn)
@@ -103,7 +106,7 @@ function changeToPreviousChapter(e) {
 }
 
 function updateNav() {
-    const chaptersSelect = document.querySelectorAll("#chapters-select");
+    const chaptersSelect = document.querySelectorAll(".chapters-select");
     chaptersSelect[0].selectedIndex = Story.currentChapter - 1;
     chaptersSelect[1].selectedIndex = Story.currentChapter - 1;
 
