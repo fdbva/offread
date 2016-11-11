@@ -28,17 +28,20 @@ function toggleSideBar() {
     sidebar.style.display = style.display === "none" ? "block" : "none";
 }
 
-function populateChaptersSelectOptions() {
-    const chaptersSelect = document.querySelector("#chapters-select");
-    chaptersSelect.innerHTML = "";
-    const optionHtml = document.createDocumentFragment();
-    for (let i = 1; i <= Story.chapters; i++) {
-        optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
-    }
-    chaptersSelect.appendChild(optionHtml);
-    chaptersSelect.addEventListener("change", function () {
-        goToChapter(this.value);
+function populateSelectOptions() {
+    const promise = new Promise(function (resolve, reject) {
+        const chaptersSelect = document.querySelector("#chapters-select");
+        chaptersSelect.innerHTML = "";
+        const optionHtml = document.createDocumentFragment();
+        for (let i = 1; i <= Story.chapters; i++) {
+            optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
+        }
+        chaptersSelect.appendChild(optionHtml);
+        chaptersSelect.addEventListener("change", function () {
+            goToChapter(this.value);
+        });
     });
+    return promise;
 }
 
 const populateDropDownMenu = function (data) {
