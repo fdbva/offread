@@ -30,36 +30,21 @@ function toggleSideBar() {
 
 function populateSelectOptions() {
     const promise = new Promise(function (resolve, reject) {
-        const chaptersSelect = document.querySelector("#chapters-select");
-        chaptersSelect.innerHTML = "";
-        const optionHtml = document.createDocumentFragment();
-        for (let i = 1; i <= Story.chapters; i++) {
-            optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
+        console.log(Story)
+        for (var i = chaptersSelect.length - 1; i >= 0; i--) {
+            chaptersSelect[i].innerHTML = "";
+            const optionHtml = document.createDocumentFragment();
+            for (let i = 1; i <= Story.chapters; i++) {
+                optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
+            }
+            chaptersSelect[i].appendChild(optionHtml);
+            chaptersSelect[i].addEventListener("change", function () {
+                goToChapter(this.value);
+            });
         }
-        chaptersSelect.appendChild(optionHtml);
-        chaptersSelect.addEventListener("change", function () {
-            goToChapter(this.value);
-        });
     });
     return promise;
 }
-
-const populateDropDownMenu = function (data) {
-    const promise = new Promise(function (resolve, reject) {
-        console.log("populateDropDownMenu, data:", data);
-        for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
-            const opt = document.createElement("option");
-            opt.value = i;
-            opt.innerHTML = "Chapter: " + i;
-            chaptersSelect.appendChild(opt);
-        };
-        chaptersSelect.addEventListener("change", function () {
-            goToChapter(this.value);
-        });
-        resolve();
-    });
-    return promise;
-};
 
 function closeMobileSidebar() {
     const sidebar = document.querySelector(".sidebar");
@@ -74,7 +59,9 @@ function closeMobileSidebar() {
 function goToChapter(chapter) {
     Story.currentChapter = chapter;
     updateNav();
-    getCurrentChapter();
+    populateSelectOptions().then(function() {
+        getCurrentChapter();
+    });
 }
 
 function getCurrentChapter() {
@@ -107,20 +94,27 @@ function changeToPreviousChapter(e) {
 }
 
 function updateNav() {
-    const chaptersSelect = document.querySelector("#chapters-select");
-    chaptersSelect.selectedIndex = Story.currentChapter - 1;
+    for (var i = chaptersSelect.length - 1; i >= 0; i--) {
+        chaptersSelect[i].selectedIndex = Story.currentChapter - 1;
+    }
+
     if (Story.currentChapter > 1) {
-        previousChapterLink.classList.remove("disable");
+        previousChapterLink[0].classList.remove("disable");
+        previousChapterLink[1].classList.remove("disable");
 
         if (Story.currentChapter == Story.chapters) {
-            nextChapterLink.classList.add("disable");
+            nextChapterLink[0].classList.add("disable");
+            nextChapterLink[1].classList.add("disable");
         } else {
-            nextChapterLink.classList.remove("disable");
+            nextChapterLink[0].classList.remove("disable");
+            nextChapterLink[1].classList.remove("disable");
         }
     } else if (Story.currentChapter === 1) {
-        previousChapterLink.classList.add("disable");
+        previousChapterLink[0].classList.add("disable");
+        previousChapterLink[1].classList.add("disable");
         if (Story.chapters > 1) {
-            nextChapterLink.classList.remove("disable");
+            nextChapterLink[0].classList.remove("disable");
+            nextChapterLink[1].classList.remove("disable");
         }
     }
 }

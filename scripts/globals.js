@@ -48,10 +48,12 @@ const btnScrapeAndDrive = document.querySelector("#btn-scrape-drive");
 const btnRestore = document.querySelector("#btn-restore");
 const inputScrape = document.querySelector("#input-scrape");
 const resultsAnchor = document.querySelector("#resultsAnchor");
-const nextChapterLink = document.querySelector(".next");
-const previousChapterLink = document.querySelector(".prev");
+
+const nextChapterLink = document.querySelectorAll(".next");
+const previousChapterLink = document.querySelectorAll(".prev");
+const chaptersSelect = document.querySelectorAll("#chapters-select");
+
 const chaptersTotal = document.querySelector("#chapters-total");
-const chaptersSelect = document.querySelector("#chapters-select");
 const mobileNav = document.querySelector("#mobile-nav");
 const homebtn = document.querySelector(".home-btn");
 const aboutbtn = document.querySelector(".about-btn");

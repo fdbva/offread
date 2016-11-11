@@ -16,8 +16,10 @@ document.addEventListener("DOMContentLoaded", (event) => {
 aboutbtn.addEventListener("click", displayScreen.bind(this, "about"));
 homebtn.addEventListener("click", displayScreen.bind(this, "home"));
 mobileNav.addEventListener("click", toggleSideBar.bind(this));
-nextChapterLink.addEventListener("click", changeToNextChapter.bind(this));
-previousChapterLink.addEventListener("click", changeToPreviousChapter.bind(this));
+nextChapterLink[0].addEventListener("click", changeToNextChapter.bind(this));
+previousChapterLink[0].addEventListener("click", changeToPreviousChapter.bind(this));
+nextChapterLink[1].addEventListener("click", changeToNextChapter.bind(this));
+previousChapterLink[1].addEventListener("click", changeToPreviousChapter.bind(this));
 
 inputScrape.addEventListener("focus", (e) => {
     this.value = "";
@@ -36,7 +38,7 @@ btnScrape.addEventListener("click",
             .then(getAllChapters)
             .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
             .then(updateSideBarMenu)    //TODO: not necessary to list and update again
-            .then(populateSelectOptions) 
+            .then(populateSelectOptions)
             .catch(function(reason) {
                 console.log("inside catch, reason: ", reason);
             });
@@ -59,7 +61,7 @@ btnScrapeAndDrive.addEventListener("click",
             .then(createAppFolderAsync)
             .then(createStoryFolderAsync)
             .then(uploadAllStoryChapters)
-            //.then(populateDropDownMenu) 
+            .then(populateSelectOptions)
             .catch(function (reason) {
                 console.log("inside catch, reason: ", reason);
             });
