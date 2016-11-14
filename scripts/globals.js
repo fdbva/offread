@@ -105,7 +105,6 @@ function makeRequest(data, retryCount = maxRequestRetry) {
     return new Promise(function (resolve, reject) {
         if (!data || !data.url) reject();
         const xhr = new XMLHttpRequest();
-        console.log(`making request with url: ${data.url}`);
         xhr.open(data.method, data.url);
         xhr.onload = function () {
             if (this.status >= 200 && this.status < 300) {

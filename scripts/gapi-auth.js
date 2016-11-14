@@ -6,7 +6,7 @@
 
 const StartGoogleDrive = function () {
     const promise = new Promise((resolve, reject) => {
-        console.log("StartGoogleDrive started");
+        console.log("StartGoogleDrive");
         var script = document.createElement('script'),
             loaded;
         script.setAttribute('src', "https://apis.google.com/js/client.js");
@@ -149,13 +149,64 @@ function uploadChapter(chapterObject, storyFolderGoogleId) {
     });
     return promise;
 }
+function uploadStory(storyObject, appFolderGoogleId) {
+    storyObject = that.chaptersArray;
+    appFolderGoogleId = globalAppFolderGoogleId;
+    const promise = new Promise((resolve, reject) => {
+        if (!storyObject) {
+            console.log("uploadStory !chapterObject", storyObject);
+        }
+        if (!appFolderGoogleId) {
+            console.log("uploadStory !storyFolderGoogleId", appFolderGoogleId);
+        }
+        console.info(`Uploading story ${storyObject[0].storyName} to Google Drive...`);
+        const boundary = "-------314159265358979323846264";
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+        const contentType = "application/json";
+        const metadata = {
+            'title': that.scrape.parsedInput.storyId,
+            'mimeType': contentType,
+            "parents": [{ "id": appFolderGoogleId }]
+        };
+        window.performance.mark('startStringifyPakoDeflateStory');
+        const obj = pako.deflate(JSON.stringify(storyObject), { to: 'string' });
+        window.performance.mark('endStringifyPakoDeflateStory');
+        const multipartRequestBody =
+            delimiter +
+                "Content-Type: application/json\r\n\r\n" +
+                JSON.stringify(metadata) +
+                delimiter +
+                "Content-Type: " +
+                contentType +
+                "\r\n\r\n" +
+                obj +
+                close_delim;
+        window.performance.mark('startUploadStory');
+        const request = gapi.client.request({
+            'path': "/upload/drive/v2/files",
+            'method': "POST",
+            'params': { 'uploadType': "multipart" },
+            'headers': {
+                'Content-Type': 'multipart/mixed; boundary="' + boundary + '"'
+            },
+            'body': multipartRequestBody
+        });
+        request.execute(function (arg) {
+            window.performance.mark('endUploadStory');
+            console.info(`Story ${storyObject[0].storyName} uploaded to Google Drive`);
+            resolve();
+        });
+    });
+    return promise;
+}
 
-function deleteFolderById(id) {
+function deleteFileById(id) {
     const promise = new Promise((resolve, reject) => {
         gapi.client.drive.files.delete({
             'fileId': id
         }).execute((resp) => {
-            console.log(`Folder ${id} deleted from Google Drive`);
+            console.log(`File ${id} deleted from Google Drive`);
             resolve();
         });
     });
@@ -170,9 +221,29 @@ function createStoryFolderAsync(resp) {
             }).then((response) => {
                 console.log("createStoryFolderAsync", response);
                 if (response.result.items.length !== 0) {
-                    deleteFolderById(response.result.items[0].id)
+                    deleteFileById(response.result.items[0].id)
                         .then(() => {
                             resolve(createStoryFolderAsyncHelper());
+                        });
+                } else {
+                    resolve(createStoryFolderAsyncHelper());
+                }
+            });
+    });
+    return promise;
+};
+
+function storyUploadProcess(resp) {
+    const promise = new Promise((resolve, reject) => {
+        gapi.client.drive.files.list(
+            {
+                'q': "mimeType = 'application/json' and title = '" + that.scrape.parsedInput.storyId + "' and trashed = false"
+            }).then((response) => {
+                console.log("storyUploadProcess", response);
+                if (response.result.items.length !== 0) {
+                    deleteFileById(response.result.items[0].id)
+                        .then(() => {
+                            resolve(uploadStory(that.chaptersArray, globalAppFolderGoogleId));
                         });
                 } else {
                     resolve(createStoryFolderAsyncHelper());

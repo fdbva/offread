@@ -5,6 +5,7 @@
 
 function openDb() {
     const promise = new Promise((resolve, reject) => {
+        console.groupCollapsed("pageStart");
         console.log("openDb ...");
         const req = indexedDB.open(DB_NAME, DB_VERSION);
         req.onsuccess = function(evt) {
@@ -13,6 +14,7 @@ function openDb() {
             // db = req.result;
             db = this.result;
             console.log("openDb DONE");
+            console.groupEnd();
             //fn();
             resolve(evt);
         };
@@ -82,7 +84,6 @@ function getChapter(storyChapterId) {
 //TODO: rever de callback para promise
 function getListOfStoriesInDb() {
     const promise = new Promise((resolve, reject) => {
-        console.log("inside getListOfStoriesInDb");
         const transaction = db.transaction(DB_STORE_NAME);
         const objectStore = transaction.objectStore(DB_STORE_NAME);
         const myArray = [];
@@ -118,13 +119,6 @@ function getListOfStoriesInDb() {
 */
 const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, content, totalOfChapters) {
     const promise = new Promise((resolve, reject) => {
-        //const obj = {
-        //    "storyChapterId": storyChapterId,
-        //    "StoryName": storyName,
-        //    "ChapterUrl": chapterUrl,
-        //    "Content": content,
-        //    "TotalOfChapters": totalOfChapters
-        //};
 
         const store = getObjectStore(DB_STORE_NAME, "readwrite");
         let req;
@@ -147,25 +141,27 @@ const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, c
     });
     return promise;
 }
-const upsertAllChaptersFromArray = () => {
+const upsertAllChaptersFromArray = (objArray) => {
     const promise = new Promise((resolve, reject) => {
-        console.group("Saving on IndexedDb");
-        return that.chaptersArray.map((response, i) => {
-            return upsertChapter(that.chaptersArray[i])
-                .then((response) => {
-                    console.log("ALO");
-                });
-        });//.then((resp)=>{console.log("tchau")});
-        for (let i = 0; i < that.chaptersArray.length; i++) {
-            const storyObj = that.chaptersArray[i];
-            upsertChapter(storyObj.storyChapterId,
-                            storyObj.storyName,
-                            storyObj.chapterUrl,
-                            storyObj.storyContent,
-                            storyObj.totalOfChapters).then((resp)=> { console.log(i)});
+        objArray = that.chaptersArray;
+        db.onerror = (event) => {
+            // Generic error handler for all errors targeted at this database's requests
+            console.error(event.target);
+            window.alert("Database error: " + (event.target.wePutrrorMessage || event.target.error.name || event.target.error || event.target.errorCode));
+        };
+        const store = getObjectStore(DB_STORE_NAME, "readwrite");
+        let i =0;
+        putNext();
+
+        function putNext() {
+            if (i < objArray.length) {
+                store.put(objArray[i]).onsuccess = putNext;
+                ++i;
+            } else {
+                console.log(`All ${that.scrape.parsedInput.storyName} chapters saved on IndexedDb`);
+                resolve(objArray);
+            }
         }
-        resolve();
-        console.groupEnd();
     });
     return promise;
 }

@@ -17,6 +17,7 @@ const getFirstChapter = function(data) {
                     storyContent: response
                 };
                 that.chaptersArray.push(storyObj);
+                delete that.scrape.chapterLinksList[0];
                 resolve(data);
             });
     });
@@ -24,26 +25,31 @@ const getFirstChapter = function(data) {
 };
 
 const getAllChapters = (data) => {
-    console.group("getAllChapters");
     const promise = new Promise((resolve, reject) => {
-        delete that.scrape.chapterLinksList[0];
         console.log("getAllChapters, data", that.scrape.chapterLinksList);
-        return that.scrape.chapterLinksList.map((response, i) => {
-            return makeRequest(that.scrape.chapterLinksList[i])
-                .then((response) => {
-                    const storyObj = {
-                    storyChapterId: that.scrape.parsedInput.storyId + "." + (i + 1),
-                    storyName: that.scrape.parsedInput.storyName,
-                    totalOfChapters: that.scrape.totalOfChapters,
-                    chapterUrl: that.scrape.parsedInput.hrefEmptyChapter + `/${i + 1}`,
-                    storyContent: response
-                    };
-                    that.chaptersArray.push(storyObj);
-                    resolve(data);
-                });
-        });
+        const k = that.scrape.chapterLinksList.length;
+        let j = 0;
+        return Promise.map(that.scrape.chapterLinksList, (response, i) => {
+                return makeRequest(that.scrape.chapterLinksList[i])
+                    .then((response) => {
+                        const storyObj = {
+                            storyChapterId: that.scrape.parsedInput.storyId + "." + (i + 1),
+                            storyName: that.scrape.parsedInput.storyName,
+                            totalOfChapters: that.scrape.totalOfChapters,
+                            chapterUrl: that.scrape.parsedInput.hrefEmptyChapter + `/${i + 1}`,
+                            storyContent: response
+                        };
+                        console.log(`requests done: ${++j}/${k}`);
+                        that.chaptersArray.push(storyObj);
+                    }).catch((reason)=> { console.log(reason); });
+            })
+            .then((resp) => {
+                window.performance.mark('endGetAllChapters');
+                console.groupEnd("getAllChapters");
+                resolve(data);
+            })
+        .catch((reason)=> { console.log(reason); });
     });
-    console.groupEnd();
     return promise;
 };
 
@@ -163,23 +169,28 @@ function yqlStringBuilder(parsedUrl, xpath, format = "json") {
     return yql;
 };
 
-function ScrapeButtonStarter() {
-    const promise = new Promise((resolve, reject) => {
-        parseUserInput(inputScrape.value, supportedSites);
-        that.scrape.yqlGetChapterLinks = yqlStringBuilder(that.scrape.parsedInput.href,
-            that.scrape.parsedInput.xpathLinks);
-        if (!that.scrape.yqlGetChapterLinks) {
-            console.log("StartScrapingAsync reject");
-            reject();
-        }
-        const title = document.querySelector("#title");
-        title.textContent = that.scrape.parsedInput.storyName;
-        console.log("StartScrapingAsync resolve");
-        resolve({ method: "GET", url: that.scrape.yqlGetChapterLinks });
+    function ScrapeButtonStarter() {
+        console.groupCollapsed("ScrapeButtonStarter");
+        that.scrape.length = 0;
+        const promise = new Promise((resolve, reject) => {
+            parseUserInput(inputScrape.value, supportedSites);
+            that.scrape.yqlGetChapterLinks = yqlStringBuilder(that.scrape.parsedInput.href,
+                that.scrape.parsedInput.xpathLinks);
+            if (!that.scrape.yqlGetChapterLinks) {
+                console.log("StartScrapingAsync reject");
+                reject();
+            }
+            const title = document.querySelector("#title");
+            title.textContent = that.scrape.parsedInput.storyName;
+            console.log("StartScrapingAsync resolve");
+            console.groupEnd("ScrapeButtonStarter");
+            resolve({ method: "GET", url: that.scrape.yqlGetChapterLinks });
     });
     return promise;
 };
-const getStoryInfo = (data) => {
+    const getStoryInfo = (data) => {
+        console.groupCollapsed("getStoryInfo");
+        window.performance.mark('startGetStoryInfo');
     return new Promise((resolve, reject) => {
         resolve(makeRequest(data));
     });
@@ -202,11 +213,15 @@ const parseStoryInfo = function (response) {
             chapterLinks: []
         };
         console.log("parseStoryInfo, storyObj", storyObj); //, data);
+        console.groupEnd("getStoryInfo");
+        window.performance.mark('endGetStoryInfo');
         resolve(storyObj);
     });
     return promise;
 };
 const buildChapterPromises = function () {
+    console.groupCollapsed("getAllChapters");
+    window.performance.mark('startGetAllChapters');
     const promise = new Promise(function(resolve, reject) {
         that.scrape.chapterLinksList.length = 0;
         for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
