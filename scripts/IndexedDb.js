@@ -18,7 +18,7 @@ function openDb() {
             //fn();
             resolve(evt);
         };
-        req.onerror = function(evt) {
+        req.onerror = function(evt)  {
             console.error("openDb:", evt.target.errorCode);
             reject(evt);
         };
@@ -30,8 +30,6 @@ function openDb() {
 
             store.createIndex("storyChapterId", "storyChapterId", { unique: true });
             store.createIndex("AuthorName", "AuthorName", { unique: false });
-            //store.createIndex("StoryName", "StoryName", { unique: false });
-            //store.createIndex("ChapterNumber", "ChapterNumber", { unique: false });
         };
     });
     return promise;
@@ -50,10 +48,10 @@ function clearObjectStore() {
     const promise = new Promise((resolve, reject) => {
         const store = getObjectStore(DB_STORE_NAME, "readwrite");
         const req = store.clear();
-        req.onsuccess = function(evt) {
+        req.onsuccess = (evt) => {
             resolve(evt);
         };
-        req.onerror = function(evt) {
+        req.onerror = (evt) => {
             reject(evt);
         };
     });
@@ -64,11 +62,11 @@ function clearObjectStore() {
 function getChapter(storyChapterId) {
     const promise = new Promise((resolve, reject) => {
         const request = db.transaction(DB_STORE_NAME).objectStore(DB_STORE_NAME).get(storyChapterId);
-        request.onerror = function(event) {
+        request.onerror = (event) => {
             console.log("GetChapterError: ", request.error);
             reject(event);
         };
-        request.onsuccess = function(event) {
+        request.onsuccess = (event) => {
             if (request.result) {
                 const value = event.target.result;
                 that.tempChapter = value;
@@ -84,12 +82,13 @@ function getChapter(storyChapterId) {
 //TODO: rever de callback para promise
 function getListOfStoriesInDb() {
     const promise = new Promise((resolve, reject) => {
+        window.performance.mark('startGetListOfStoriesInDb');
         const transaction = db.transaction(DB_STORE_NAME);
         const objectStore = transaction.objectStore(DB_STORE_NAME);
         const myArray = [];
         const storySet = new Set();
         const request = objectStore.openCursor();
-        request.onsuccess = function() {
+        request.onsuccess = () => {
             const cursor = this.result;
             if (!cursor) return;
             if (!storySet.has(cursor.value.StoryName)) {
@@ -98,26 +97,20 @@ function getListOfStoriesInDb() {
             }
             cursor.continue();
         };
-        request.onerror = function (error) {
+        request.onerror = (error) => {
             console.log("getListOfStoriesInDb onerror: ", error);
             reject(error);
         };
-        transaction.oncomplete = function() {
+        transaction.oncomplete = () => {
             that.sidebarMenu = (myArray);
+            window.performance.mark('endGetListOfStoriesInDb');
             resolve(myArray);
         };
     });
     return promise;
 }
 
-/**
-* @param {string} storyChapterId
-* @param {string} storyName
-* @param {string} chapterUrl
-* @param {json object} content
-* @param {string} totalOfChapters
-*/
-const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, content, totalOfChapters) {
+const upsertChapter = (obj) => {
     const promise = new Promise((resolve, reject) => {
 
         const store = getObjectStore(DB_STORE_NAME, "readwrite");
@@ -125,16 +118,14 @@ const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, c
         try {
             req = store.put(obj);
         } catch (e) {
-            if (e.name == "DataCloneError")
-                displayActionFailure("This engine doesn't know how to clone a Blob, " +
-                    "use Firefox");
+            console.error("DB errpr: ", e);
             throw e;
         }
-        req.onsuccess = function(evt) {
+        req.onsuccess = (evt) => {
             console.log(`Chapter ${obj.storyChapterId.split('.')[1]} from story ${obj.storyName} saved on IndexedDb`);
             resolve();
         };
-        req.onerror = function() {
+        req.onerror = () => {
             console.error("addStory error", this.error);
             reject(this.error);
         };
@@ -143,9 +134,9 @@ const upsertChapter = function(obj) {//(storyChapterId, storyName, chapterUrl, c
 }
 const upsertAllChaptersFromArray = (objArray) => {
     const promise = new Promise((resolve, reject) => {
+        window.performance.mark('startUpsertAllChaptersFromArray');
         objArray = that.chaptersArray;
         db.onerror = (event) => {
-            // Generic error handler for all errors targeted at this database's requests
             console.error(event.target);
             window.alert("Database error: " + (event.target.wePutrrorMessage || event.target.error.name || event.target.error || event.target.errorCode));
         };
@@ -158,7 +149,10 @@ const upsertAllChaptersFromArray = (objArray) => {
                 store.put(objArray[i]).onsuccess = putNext;
                 ++i;
             } else {
+                console.groupCollapsed("IndexedDb");
                 console.log(`All ${that.scrape.parsedInput.storyName} chapters saved on IndexedDb`);
+                console.groupEnd("IndexedDb");
+                window.performance.mark('endUpsertAllChaptersFromArray');
                 resolve(objArray);
             }
         }
@@ -174,15 +168,15 @@ function deleteChapter(storyChapterId) {
         console.log("deletePublication:", arguments);
         const store = getObjectStore(DB_STORE_NAME, "readwrite");
         const req = store.index("storyChapterId");
-        req.get(storyChapterId).onsuccess = function(evt) {
+        req.get(storyChapterId).onsuccess = (evt) => {
             if (typeof evt.target.result == "undefined") {
-                // displayActionFailure("No matching record found");
+                console.error("No matching record found");
                 return;
             }
             deleteMethod(evt.target.result.storyChapterId, store)
-                .then(function () { resolve() });
+                .then(() => { resolve() });
         };
-        req.onerror = function(evt) {
+        req.onerror = (evt) => {
             console.error("deleteChapter:", evt.target.errorCode);
             reject(evt);
         };
@@ -201,36 +195,29 @@ function deleteMethod(key, store) {
         if (typeof store == "undefined")
             store = getObjectStore(DB_STORE_NAME, "readwrite");
 
-        // As per spec http://www.w3.org/TR/IndexedDB/#object-store-deletion-operation
-        // the result of the Object Store Deletion Operation algorithm is
-        // undefined, so it's not possible to know if some records were actually
-        // deleted by looking at the request result.
         let req = store.get(key);
-        req.onsuccess = function(evt) {
+        req.onsuccess = (evt) => {
             const record = evt.target.result;
             console.log("record:", record);
             if (typeof record == "undefined") {
-                // displayActionFailure("No matching record found");
+                console.error("No matching record found");
                 reject("No matching record found");
                 return;
             }
-            // Warning: The exact same key used for creation needs to be passed for
-            // the deletion. If the key was a Number for creation, then it needs to
-            // be a Number for deletion.
             req = store.delete(key);
-            req.onsuccess = function(evt) {
+            req.onsuccess = (evt) => {
                 console.log("evt:", evt);
                 console.log("evt.target:", evt.target);
                 console.log("evt.target.result:", evt.target.result);
                 console.log("delete successful");
                 resolve(evt);
             };
-            req.onerror = function(evt) {
+            req.onerror = (evt) => {
                 console.error("deleteMethod:", evt.target.errorCode);
                 reject(evt);
             };
         };
-        req.onerror = function(evt) {
+        req.onerror = (evt) => {
             console.error("deleteMethod:", evt.target.errorCode);
             reject(evt);
         };

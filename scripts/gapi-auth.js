@@ -4,16 +4,18 @@
 /*eslint-env es6*/
 
 
-const StartGoogleDrive = function () {
+const StartGoogleDrive = () => {
     const promise = new Promise((resolve, reject) => {
+        console.groupCollapsed("Google Drive");
         console.log("StartGoogleDrive");
-        var script = document.createElement('script'),
-            loaded;
+        window.performance.mark('startStartGoogleDriveToCreateAppFolder');
+        const script = document.createElement('script');
+        let loaded;
         script.setAttribute('src', "https://apis.google.com/js/client.js");
 
-        script.onreadystatechange = script.onload = function () {
+        script.onreadystatechange = script.onload = () => {
             if (!loaded) {
-                setTimeout(function () { resolve(); }, 600);
+                setTimeout(() => { resolve(); }, 600);
             };
             loaded = true;
         };
@@ -142,7 +144,7 @@ function uploadChapter(chapterObject, storyFolderGoogleId) {
             },
             'body': multipartRequestBody
         });
-        request.execute(function (arg) {
+        request.execute((arg) => {
             console.info(`Chapter ${chapterObject.storyChapterId.split('.')[1]} from story ${chapterObject.storyName} uploaded to Google Drive`);
             resolve();
         });
@@ -169,9 +171,12 @@ function uploadStory(storyObject, appFolderGoogleId) {
             'mimeType': contentType,
             "parents": [{ "id": appFolderGoogleId }]
         };
-        window.performance.mark('startStringifyPakoDeflateStory');
-        const obj = pako.deflate(JSON.stringify(storyObject), { to: 'string' });
-        window.performance.mark('endStringifyPakoDeflateStory');
+        window.performance.mark('startPakoDeflateStory');
+        const jsonObj = JSON.stringify(storyObject);
+        const deflatedObj = pako.deflate(jsonObj, { to: 'string' });
+        console.log("estimated file size (length*1.5): ", deflatedObj.length*1.5);
+        console.log("estimated file size without compression (length*1): ", jsonObj.length);
+        window.performance.mark('endPakoDeflateStory');
         const multipartRequestBody =
             delimiter +
                 "Content-Type: application/json\r\n\r\n" +
@@ -180,9 +185,8 @@ function uploadStory(storyObject, appFolderGoogleId) {
                 "Content-Type: " +
                 contentType +
                 "\r\n\r\n" +
-                obj +
+                deflatedObj +
                 close_delim;
-        window.performance.mark('startUploadStory');
         const request = gapi.client.request({
             'path': "/upload/drive/v2/files",
             'method': "POST",
@@ -192,9 +196,11 @@ function uploadStory(storyObject, appFolderGoogleId) {
             },
             'body': multipartRequestBody
         });
-        request.execute(function (arg) {
+        request.execute((arg) => {
             window.performance.mark('endUploadStory');
-            console.info(`Story ${storyObject[0].storyName} uploaded to Google Drive`);
+            console.info(`File size reported by google: `, arg.fileSize);
+            console.info(`Story ${storyObject[0].storyName} uploaded to Google Drive. arg: `, arg);
+            console.groupEnd("Google Drive");
             resolve();
         });
     });
@@ -235,6 +241,7 @@ function createStoryFolderAsync(resp) {
 
 function storyUploadProcess(resp) {
     const promise = new Promise((resolve, reject) => {
+        window.performance.mark('startUploadStory');
         gapi.client.drive.files.list(
             {
                 'q': "mimeType = 'application/json' and title = '" + that.scrape.parsedInput.storyId + "' and trashed = false"
@@ -242,11 +249,12 @@ function storyUploadProcess(resp) {
                 console.log("storyUploadProcess", response);
                 if (response.result.items.length !== 0) {
                     deleteFileById(response.result.items[0].id)
-                        .then(() => {
+                        .then((resp) => {
+                            console.log("deleteFileById, resp", resp);
                             resolve(uploadStory(that.chaptersArray, globalAppFolderGoogleId));
                         });
                 } else {
-                    resolve(createStoryFolderAsyncHelper());
+                    resolve(uploadStory(that.chaptersArray, globalAppFolderGoogleId));
                 }
             });
     });
@@ -281,6 +289,7 @@ function createAppFolderAsync(resp) {
                     resolve(createAppFolderAsyncHelper());
                 } else {
                     globalAppFolderGoogleId = response.result.items[0].id;
+                    window.performance.mark('endStartGoogleDriveToCreateAppFolder');
                     resolve();
                 }
             });
@@ -295,6 +304,7 @@ function createAppFolderAsyncHelper(resp) {
         gapi.client.drive.files.insert({ 'resource': data }).execute((fileList) => {
             globalAppFolderGoogleId = fileList.id;
             console.log(fileList);
+            window.performance.mark('endStartGoogleDriveToCreateAppFolder');
             resolve();
         });
     });
@@ -303,13 +313,13 @@ function createAppFolderAsyncHelper(resp) {
 
 function restoreFromGoogle() {
     const promise = new Promise((resolve, reject) => {
-        var request = gapi.client.drive.files.list(
+        const request = gapi.client.drive.files.list(
         {
             'q': "mimeType = 'application/json' and '"+globalAppFolderGoogleId+"' in parents  and trashed = false"
         });
-        request.execute(function (resp) {
+        request.execute((resp) => {
             console.log("restoreFromGoogle, id: ", globalAppFolderGoogleId);
-            var files = resp.items;
+            const files = resp.items;
             console.log("restoreFromGoogle, files: ", files);
             resolve(downloadFiles(files));
         });
@@ -358,13 +368,13 @@ function downloadFiles(files) {
 };
     function makeRequestGoogleDrive(downloadUrl, retryCount = maxRequestRetry) {
     if (!downloadUrl) return;
-    return new Promise(function (resolve, reject) {
-        var accessToken = gapi.auth.getToken().access_token;
+    return new Promise((resolve, reject) => {
+        const accessToken = gapi.auth.getToken().access_token;
         const xhr = new XMLHttpRequest();
         console.log(`making request with url: ${downloadUrl}`);
         xhr.open('GET', downloadUrl);
         xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-        xhr.onload = function () {
+        xhr.onload = () => {
             if (this.status >= 200 && this.status < 300) {
                 console.log(xhr);
                 appState = JSON.parse(xhr.responseText);
@@ -380,7 +390,7 @@ function downloadFiles(files) {
                 }
             }
         };
-        xhr.onerror = function () {
+        xhr.onerror = () => {
             //retry to download could enter here before rejecting
             if (retryCount) {
                 setTimeout(makeRequest(data, --retryCount), 100);
@@ -397,17 +407,17 @@ function downloadFiles(files) {
 function downloadFile(file) {
     const promise = new Promise((resolve, reject) => {
         if (file.downloadUrl) {
-            var accessToken = gapi.auth.getToken().access_token;
-            var xhr = new XMLHttpRequest();
+            const accessToken = gapi.auth.getToken().access_token;
+            const xhr = new XMLHttpRequest();
             xhr.open('GET', file.downloadUrl);
             xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-            xhr.onload = function () {
+            xhr.onload = () => {
                 console.log('Data downloaded:');
                 appState = JSON.parse(xhr.responseText);
                 console.log(appState);
                 addOrReplaceStory(appState.ChapterId, appState.StoryName, appState.Url, appState.Content, appState.NumberOfChapters);
             };
-            xhr.onerror = function () {
+            xhr.onerror = () => {
                 console.log('XHR error!');
                 reject();
             };

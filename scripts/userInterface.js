@@ -36,13 +36,13 @@ function populateChaptersSelectOptions() {
         optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
     }
     chaptersSelect.appendChild(optionHtml);
-    chaptersSelect.addEventListener("change", function () {
+    chaptersSelect.addEventListener("change", () => {
         goToChapter(this.value);
     });
 }
 
-const populateDropDownMenu = function (data) {
-    const promise = new Promise(function (resolve, reject) {
+const populateDropDownMenu = (data) => {
+    const promise = new Promise((resolve, reject) => {
         console.log("populateDropDownMenu, data:", data);
         for (let i = 1; i <= that.scrape.totalOfChapters; i++) {
             const opt = document.createElement("option");
@@ -50,7 +50,7 @@ const populateDropDownMenu = function (data) {
             opt.innerHTML = "Chapter: " + i;
             chaptersSelect.appendChild(opt);
         };
-        chaptersSelect.addEventListener("change", function () {
+        chaptersSelect.addEventListener("change", () => {
             goToChapter(this.value);
         });
         resolve();
@@ -124,10 +124,11 @@ function updateNav() {
 
 function updateSideBarMenu() {
     const promise = new Promise((resolve, reject) => {
-        var data = that.sidebarMenu;
+        window.performance.mark('startUpdateSideBarMenu');
+        const data = that.sidebarMenu;
         const strList = document.querySelector(".sidebar-list");
         strList.innerHTML = "";
-        data.forEach(function(obj, i) {
+        data.forEach((obj, i) => {
             strList.insertAdjacentHTML("beforeend",
                 `
         <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.StoryName}">
@@ -138,7 +139,7 @@ function updateSideBarMenu() {
         const storySelector = document.querySelectorAll(".story-sel");
         for (let i = storySelector.length - 1; i >= 0; i--) {
             storySelector[i].addEventListener("click",
-                function(e) {
+                (e) => {
                     console.log(this.dataset.story);
                     const s = this.dataset.story;
                     console.log(data[s]);
@@ -156,6 +157,7 @@ function updateSideBarMenu() {
                     displayScreen();
                 });
         };
+        window.performance.mark('endUpdateSideBarMenu');
         resolve();
     });
     return promise;
