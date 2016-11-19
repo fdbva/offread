@@ -75,13 +75,17 @@ function closeMobileSidebar() {
 }
 
 function goToChapter(chapter) {
-    Story.currentChapter = chapter;
-    getCurrentChapter();
+    Story.currentChapter = Number.parseInt(chapter);
     updateNav();
+    getCurrentChapter();
 }
 
 function getCurrentChapter() {
+    if (!Number.isInteger(Story.currentChapter)) {
+        console.error("It's not a FUCKING NUMBER!");
+    }
     const nextStoryPath = Story.id + "." + Story.currentChapter;
+    console.log("getCurrentChapter", nextStoryPath);
     getChapter(nextStoryPath);
 }
 
