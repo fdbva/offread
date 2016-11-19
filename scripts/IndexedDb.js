@@ -103,7 +103,13 @@ function getChapter(chapterId) {
                 const value = event.target.result;
                 that.tempChapter = value;
                 console.log(value.storyContent.slice(0, 300));
-                storyList.innerHTML = `<div class="chapterBox">${value.storyContent}</div>`;
+
+                var chapterBox = document.createElement("div");
+                chapterBox.classList.add('chapterBox');
+                chapterBox.innerHTML = value.storyContent;
+
+                storyList.innerHTML = '';
+                storyList.appendChild(chapterBox);
             }
             resolve(event.target.result);
         };

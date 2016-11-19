@@ -15,8 +15,12 @@ function displayScreen(currentDisplay) {
         about.style.display = "block";
     else if (currentDisplay === "home")
         home.style.display = "block";
-    else
+    else {
         offreader.style.display = "block";
+        setTimeout(function(){
+            getCurrentChapter();
+        }, 600);
+    }
 }
 
 function toggleSideBar() {
