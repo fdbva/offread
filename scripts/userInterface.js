@@ -30,18 +30,32 @@ function toggleSideBar() {
 
 function populateSelectOptions() {
     const promise = new Promise(function (resolve, reject) {
-        console.log(Story)
-        for (var i = chaptersSelect.length - 1; i >= 0; i--) {
-            chaptersSelect[i].innerHTML = "";
-            const optionHtml = document.createDocumentFragment();
-            for (let i = 1; i <= Story.chapters; i++) {
-                optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
-            }
-            chaptersSelect[i].appendChild(optionHtml);
-            chaptersSelect[i].addEventListener("change", function () {
-                goToChapter(this.value);
-            });
+        const select = document.querySelectorAll(".chapters-select");
+
+        select[0].innerHTML = "";
+        select[1].innerHTML = "";
+
+        const optionHtml = document.createDocumentFragment(),
+            optionHtml2 = document.createDocumentFragment();
+        for (let i = 1; i <= Story.chapters; i++) {
+            optionHtml.appendChild(new Option(`Chapter: ${i}`, i));
+            optionHtml2.appendChild(new Option(`Chapter: ${i}`, i));
         }
+
+        select[0].appendChild(optionHtml);
+        select[1].appendChild(optionHtml2);
+        
+        function changeFn(e) {
+            console.log(this.value);
+            goToChapter(this.value);
+            e.preventDefault();
+            window.scrollTo(0, 0);
+        };
+
+        select[0].addEventListener("change", changeFn)
+        select[1].addEventListener("change", changeFn)
+
+        resolve()
     });
     return promise;
 }
@@ -58,10 +72,8 @@ function closeMobileSidebar() {
 
 function goToChapter(chapter) {
     Story.currentChapter = chapter;
+    getCurrentChapter();
     updateNav();
-    populateSelectOptions().then(function() {
-        getCurrentChapter();
-    });
 }
 
 function getCurrentChapter() {
@@ -94,9 +106,9 @@ function changeToPreviousChapter(e) {
 }
 
 function updateNav() {
-    for (var i = chaptersSelect.length - 1; i >= 0; i--) {
-        chaptersSelect[i].selectedIndex = Story.currentChapter - 1;
-    }
+    const chaptersSelect = document.querySelectorAll(".chapters-select");
+    chaptersSelect[0].selectedIndex = Story.currentChapter - 1;
+    chaptersSelect[1].selectedIndex = Story.currentChapter - 1;
 
     if (Story.currentChapter > 1) {
         previousChapterLink[0].classList.remove("disable");
@@ -139,7 +151,7 @@ function updateSideBarMenu() {
                     console.log(this.dataset.story);
                     const s = this.dataset.story;
                     console.log(data[s]);
-                    Story.chapters = that.chaptersArray.length;
+                    Story.chapters = data[s].TotalOfChapters;
                     Story.name = data[s].StoryName;
                     Story.id = data[s].storyChapterId.split(".")[0];
                     chaptersTotal.textContent = Story.chapters;
