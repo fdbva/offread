@@ -44,7 +44,7 @@ function populateSelectOptions() {
 
         select[0].appendChild(optionHtml);
         select[1].appendChild(optionHtml2);
-        
+
         function changeFn(e) {
             console.log(this.value);
             goToChapter(this.value);
@@ -139,8 +139,8 @@ function updateSideBarMenu() {
         data.forEach(function(obj, i) {
             strList.insertAdjacentHTML("beforeend",
                 `
-        <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.StoryName}">
-            <span class="sidebar-list--text">${obj.StoryName} - ${obj.TotalOfChapters} chapters</span>
+        <a href="#" class="sidebar-list--item story-sel" data-story="${i}" title="${obj.storyName}">
+            <span class="sidebar-list--text">${obj.storyName} - ${obj.totalOfChapters} chapters</span>
         </a>`);
         });
 
@@ -148,12 +148,13 @@ function updateSideBarMenu() {
         for (let i = storySelector.length - 1; i >= 0; i--) {
             storySelector[i].addEventListener("click",
                 function(e) {
+                    console.log(this);
                     console.log(this.dataset.story);
                     const s = this.dataset.story;
                     console.log(data[s]);
-                    Story.chapters = data[s].TotalOfChapters;
-                    Story.name = data[s].StoryName;
-                    Story.id = data[s].storyChapterId.split(".")[0];
+                    Story.name = data[s].storyName;
+                    Story.id = data[s].chapterId.split(".")[0];
+                    Story.chapters = data[s].totalOfChapters;
                     chaptersTotal.textContent = Story.chapters;
                     title.textContent = Story.name;
                     Story.currentChapter = 1;

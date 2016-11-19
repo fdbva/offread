@@ -1,4 +1,3 @@
-
 /*eslint-env browser, parsedInput */
 /*eslint no-var: "error"*/
 /*eslint prefer-const: "error"*/
@@ -10,12 +9,17 @@ document.addEventListener("DOMContentLoaded", (event) => {
         .then(updateSideBarMenu)
         .catch((reason) => {
             console.log("DOMContentLoaded catch, reason: ", reason);
-        });
+        })
+    .then(() => {
+        console.groupEnd("pageStart");
+        window.performance.clearMarks();
+    });
 });
 //btnScrape.addEventListener("click", StartScrap);
 aboutbtn.addEventListener("click", displayScreen.bind(this, "about"));
 homebtn.addEventListener("click", displayScreen.bind(this, "home"));
 mobileNav.addEventListener("click", toggleSideBar.bind(this));
+
 nextChapterLink[0].addEventListener("click", changeToNextChapter.bind(this));
 previousChapterLink[0].addEventListener("click", changeToPreviousChapter.bind(this));
 nextChapterLink[1].addEventListener("click", changeToNextChapter.bind(this));
@@ -32,16 +36,15 @@ btnScrape.addEventListener("click",
             .then(getStoryInfo)
             .then(parseStoryInfo)
             .then(buildChapterPromises)
-            .then(getFirstChapter)
-            .then(getListOfStoriesInDb) //TODO: optimize,
-            .then(updateSideBarMenu)    //TODO: without going to DB? Don't need to get everything again?
             .then(getAllChapters)
+            .then(upsertAllChaptersFromArray)
             .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
-            .then(updateSideBarMenu)    //TODO: not necessary to list and update again
+            .then(updateSideBarMenu) //TODO: not necessary to list and update again
             .then(populateSelectOptions)
-            .catch(function(reason) {
+            .catch((reason) => {
                 console.log("inside catch, reason: ", reason);
-            });
+            })
+        .then(reportPerformance);
     });
 btnScrapeAndDrive.addEventListener("click",
     () => {
@@ -49,31 +52,43 @@ btnScrapeAndDrive.addEventListener("click",
             .then(getStoryInfo)
             .then(parseStoryInfo)
             .then(buildChapterPromises)
-            .then(getFirstChapter)
-            .then(getListOfStoriesInDb) //TODO: optimize,
-            .then(updateSideBarMenu)    //TODO: without going to DB? Don't need to get everything again?
             .then(getAllChapters)
+            .then(upsertAllChaptersFromArray)
             .then(getListOfStoriesInDb) //TODO: only disable loader gif? still need to create/enable gif
             .then(updateSideBarMenu)    //TODO: not necessary to list and update again
             .then(StartGoogleDrive)
-            //.then(handleClientLoad)
-            .then(checkAuthImmediate)//.then(function (resp) { test(resp); }))
+            .then(forceAuthGoogleDrive)
             .then(createAppFolderAsync)
-            .then(createStoryFolderAsync)
-            .then(uploadAllStoryChapters)
+            .then(storyUploadProcess)
             .then(populateSelectOptions)
-            .catch(function (reason) {
+            .catch((reason) => {
                 console.log("inside catch, reason: ", reason);
-            });
+            })
+        .then(reportPerformance);
     });
 
 btnRestore.addEventListener("click",
     () => {
         StartGoogleDrive()
-            .then(checkAuthImmediate)
+            .then(forceAuthGoogleDrive)
             .then(createAppFolderAsync)
             .then(restoreFromGoogle)
             .catch((reason) => {
                 console.log("inside catch, reason: ", reason);
-            });
+            })
+        .then(reportPerformance);
     });
+const deleteStoryProcess = (storyId) => {
+    deleteStoryDb(storyId);
+
+}
+const restoreFromGoogleProcess = () => {
+    restoreFromGoogle();
+    // flatten resp in arrays of Chapters grouped from same story
+    const story1array = [];
+    const story2array = [story1array, story2array];
+    const arrayOfStories = [];
+    //loop arrayOfStories
+    let i = 0;
+    upsertAllChaptersFromArray(arrayOfStories[i]);
+}

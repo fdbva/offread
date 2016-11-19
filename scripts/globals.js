@@ -5,6 +5,7 @@
 
 const that = this;
 
+that.batchRequestDelay = 3000;
 that.scrape = {
     parsedInput: {
         origin: null,
@@ -31,15 +32,21 @@ that.scrape = {
 that.tempChapter = {};
 that.sidebarMenu = {};
 that.chapterObject = {
-    storyChapterId: null,
+    chapterId: null,
+    storyId: null,
+    chapterNumber: null,
     storyName: null,
     totalOfChapters: null,
     chapterUrl: null,
+    author: null,
     storyContent: null
 };
+that.retryCount = [];
+const maxRequestRetry = 5;
 that.chaptersArray = [];
-that.storyInfo = {};
+that.storyInfo = {
 
+};
 let Story = {};
 
 //HTML hooks
@@ -58,15 +65,13 @@ const mobileNav = document.querySelector("#mobile-nav");
 const homebtn = document.querySelector(".home-btn");
 const aboutbtn = document.querySelector(".about-btn");
 
-        //IndexedDb
+//IndexedDb
 const DB_NAME = "offread";
-const DB_VERSION = 6; // Use a long long for this value (don't use a float)
+const DB_VERSION = 8;
 const DB_STORE_NAME = "stories";
 let db;
-// Used to keep track of which view is displayed to avoid uselessly reloading it
-let current_view_pub_key;
 
-        //Google Auth
+//Google Auth
 const CLIENT_ID = "698825936465-j1cs44897v5flnfrf7fpppnukp6okpq7.apps.googleusercontent.com";
 const SCOPES = "https://www.googleapis.com/auth/drive";
 let id = null;
@@ -74,6 +79,7 @@ let idOff = null;
 let globalAppFolderGoogleId = null;
 let globalStoryFolderGoogleId = null;
 let idStory = undefined;
+
 let storyName = undefined;
 that.driveItems = [];
 
@@ -100,28 +106,66 @@ const supportedSites = new Map([
     }]
 ]);
 
-function makeRequest(data) {
-    if (!data) return;
-    return new Promise(function (resolve, reject) {
+const reportPerformance = function() {
+    const promise = new Promise((resolve, reject) => {
+        window.performance.mark("endWholeProcess");
+        console.groupCollapsed("Performance report...");
+        const markItems = window.performance.getEntriesByType('mark');
+        const markConfig = ["DeleteStory", "WholeProcess", "GetListOfStoriesInDb", "UpdateSideBarMenu", "UploadStory", "PakoDeflateStory", "StartGoogleDriveToCreateAppFolder", "UpsertAllChaptersFromArray", "GetAllChapters", "BuildChapterPromises", "ParseStoryInfo", "GetStoryInfo"];
+        console.log("markItems: ", markItems);
+        let sum = 0;
+        for (let j = markConfig.length - 1; j >= 0; j--) {
+            for (let i = markItems.length - 1; i >= 0; i--) {
+                if (markItems[i].name === `start${markConfig[j]}`) {
+                    window.performance.measure(markConfig[j], `start${markConfig[j]}`, `end${markConfig[j]}`);
+                    console.log(`${markConfig[j]} (ms): `,
+                        window.performance.getEntriesByName(markConfig[j])[0].duration);
+                    sum += window.performance.getEntriesByName(markConfig[j])[0].duration;
+                }
+            }
+        }
+        if (window.performance.getEntriesByName("WholeProcess")) {
+            console.log("Sum of parts = ", sum - window.performance.getEntriesByName("WholeProcess")[0].duration);
+        }
+        console.groupEnd("Performance report...");
+        window.performance.clearMarks();
+        window.performance.clearMeasures();
+        resolve();
+    });
+    return promise;
+};
+
+function makeRequest(data, retryCount = maxRequestRetry) {
+    return new Promise((resolve, reject) => {
+        if (!data || !data.url) reject();
         const xhr = new XMLHttpRequest();
-        console.log(`making request with url: ${data.url}`);
         xhr.open(data.method, data.url);
-        xhr.onload = function () {
+        xhr.onload = function()  {
             if (this.status >= 200 && this.status < 300) {
                 resolve(xhr.response);
             } else {
+                if (retryCount) {
+                    setTimeout(makeRequest(data, --retryCount), 100);
+                } else {
+                    console.error("makeRequest exceeded max of tries, status: ", this.status);
+                    reject({
+                        status: this.status,
+                        statusText: xhr.statusText
+                    });
+                }
+            }
+        };
+        xhr.onerror = function() {
+            console.log("...");
+            if (retryCount) {
+                setTimeout(makeRequest(data, --retryCount), 100);
+            } else {
+                console.error("makeRequest exceeded max of tries (onerror), status: ", this.status);
                 reject({
                     status: this.status,
                     statusText: xhr.statusText
                 });
             }
-        };
-        xhr.onerror = function () {
-            //retry to download could enter here before rejecting
-            reject({
-                status: this.status,
-                statusText: xhr.statusText
-            });
         };
         xhr.send();
     });
